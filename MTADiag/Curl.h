@@ -19,8 +19,8 @@
 #include "curl/types.h"
 #include "curl/easy.h"
 
-bool			downloadFile			(char *fileURL, string filePath);
-void			progress_func			(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded);
-size_t			write_data				(void *ptr, size_t size, size_t nmemb, FILE *stream);
+bool            downloadFile            (char *fileURL, string filePath);
+void            progress_func           (void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded);
+size_t          write_data              (void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 #endif

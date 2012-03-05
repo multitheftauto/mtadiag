@@ -20,16 +20,16 @@
 #define buffSize 255
 #define CUR_MTA_VERSIONS 5 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4
 
-#define MTAPathValue "Last Install Location"
+#define MTAPathValue	"Last Install Location"
 #define MTA11PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1"
 #define MTA12PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2"
 #define MTA13PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3"
 #define MTA14PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4"
 
-#define MTAGTAPathValue "GTA:SA Path"
+#define MTAGTAPathValue  "GTA:SA Path"
 #define MTAGTAPathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\Common"
 
-#define MTAVerValue "mta-version-ext"
+#define MTAVerValue		"mta-version-ext"
 #define MTA11VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1\\Settings\\general"
 #define MTA12VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2\\Settings\\general"
 #define MTA13VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3\\Settings\\general"
