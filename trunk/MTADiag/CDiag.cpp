@@ -18,34 +18,34 @@
 
 // initialize everything
 // used for storing environment variables & current system time
-char					CDiag::tempDir[255];
-char					CDiag::systemRoot[255];
-SYSTEMTIME				CDiag::sysTime;
+char                    CDiag::tempDir[255];
+char                    CDiag::systemRoot[255];
+SYSTEMTIME              CDiag::sysTime;
 
 // strings to store various paths
-string					CDiag::diagLogPath;
-string					CDiag::nightlyPath;
-string					CDiag::dxDiagLogPath;
-string					CDiag::taskListPath;
-string					CDiag::D3DX9_43Path;
-string					CDiag::MTAPath;
-string					CDiag::GTAPath;
+string                  CDiag::diagLogPath;
+string                  CDiag::nightlyPath;
+string                  CDiag::dxDiagLogPath;
+string                  CDiag::taskListPath;
+string                  CDiag::D3DX9_43Path;
+string                  CDiag::MTAPath;
+string                  CDiag::GTAPath;
 
 // store current MTA version when GetMTAVersion() is called, and store the original version to dump in the log file
-string					CDiag::MTAVersion;
-string					CDiag::OriginalMTAVersion;
+string                  CDiag::MTAVersion;
+string                  CDiag::OriginalMTAVersion;
 
-string					CDiag::MTAVersionsInstalled[CUR_MTA_VERSIONS];	// array to store paths of all MTA versions currently installed
-int						CDiag::MTAVerChoice;							// stores user's choice of which MTA version to diagnose
+string                  CDiag::MTAVersionsInstalled[CUR_MTA_VERSIONS];  // array to store paths of all MTA versions currently installed
+int                     CDiag::MTAVerChoice;                            // stores user's choice of which MTA version to diagnose
 
-bool					CDiag::DXUpdated;								// was DirectX updated by MTADiag?
+bool                    CDiag::DXUpdated;                               // was DirectX updated by MTADiag?
 
 void CDiag::Init ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
-	GetEnvironmentVariable ( "temp", tempDir, buffSize );			// get the temp directory
-	GetEnvironmentVariable ( "systemRoot", systemRoot, buffSize );	// get the WINDOWS directory
-	GetLocalTime ( &sysTime );										// get the current system time
+	GetEnvironmentVariable ( "temp", tempDir, buffSize );           // get the temp directory
+	GetEnvironmentVariable ( "systemRoot", systemRoot, buffSize );  // get the WINDOWS directory
+	GetLocalTime ( &sysTime );                                      // get the current system time
 
 	// generate necessary file paths (MTADiag's own log, dxdiag, nightly exe download, task list)
 	stringstream ss; // create a stringstream
