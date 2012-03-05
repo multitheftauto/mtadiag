@@ -42,57 +42,57 @@
 
 class CDiag {
 public:
-	static void				Init						( void );
-	static void				Destroy						( void );
+	static void             Init                        ( void );
+	static void             Destroy                     ( void );
 
-	static string			CDiag::diagLogPath;
+	static string           CDiag::diagLogPath;
 private:
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
-	static bool				PollMTAVersions				( void );
-	static void				UserPickVersion				( void );
+	static bool             PollMTAVersions             ( void );
+	static void             UserPickVersion             ( void );
 
 	// gather MTA's path and version, and GTA:SA's path
-	static string			GetMTAPath					( void );
-	static string			GetGamePath					( void );
-	static string			GetMTAVersion				( void );
+	static string           GetMTAPath                  ( void );
+	static string           GetGamePath                 ( void );
+	static string           GetMTAVersion               ( void );
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
 	// and check if a D3D9.dll is present in the GTA:SA directory
-	static bool				IsDirectXUpToDate			( void );
-	static bool				CheckForD3D9				( void );
+	static bool             IsDirectXUpToDate           ( void );
+	static bool             CheckForD3D9                ( void );
 
 	// update MTA:SA to the latest nightly/unstable build
 	// and update DirectX if necessary
-	static void				UpdateMTA					( void );
-	static void				UpdateDirectX				( void );
+	static void             UpdateMTA                   ( void );
+	static void             UpdateDirectX               ( void );
 
 	// generate a DXDiag log, a list of currently running processes
 	// then concatenate those logs, MTA's logs, and some other miscellaneous info
-	static void				GenerateDXDiag				( void );
-	static void				GenerateTaskList			( void );
-	static bool				ConcatenateLogs				( void );
+	static void             GenerateDXDiag              ( void );
+	static void             GenerateTaskList            ( void );
+	static bool             ConcatenateLogs             ( void );
 
 	// used for storing environment variables & current system time
-	static char				tempDir[255];
-	static char				systemRoot[255];
-	static SYSTEMTIME		sysTime;
+	static char             tempDir[255];
+	static char             systemRoot[255];
+	static SYSTEMTIME       sysTime;
 
 	// strings to store various paths
-	static string			nightlyPath;
-	static string			dxDiagLogPath;
-	static string			taskListPath;
-	static string			D3DX9_43Path;
-	static string			MTAPath;
-	static string			GTAPath;
+	static string           nightlyPath;
+	static string           dxDiagLogPath;
+	static string           taskListPath;
+	static string           D3DX9_43Path;
+	static string           MTAPath;
+	static string           GTAPath;
 
 	// store current MTA version when GetMTAVersion() is called, and store the original version to dump in the log file
-	static string			MTAVersion;
-	static string			OriginalMTAVersion;
+	static string           MTAVersion;
+	static string           OriginalMTAVersion;
 
-	static string			MTAVersionsInstalled[CUR_MTA_VERSIONS];	// array to store paths of all MTA versions currently installed
-	static int				MTAVerChoice;							// stores user's choice of which MTA version to diagnose
+	static string           MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed
+	static int              MTAVerChoice;                           // stores user's choice of which MTA version to diagnose
 
-	static bool				DXUpdated;								// was DirectX updated by MTADiag?
+	static bool             DXUpdated;                              // was DirectX updated by MTADiag?
 };
 
 #endif
