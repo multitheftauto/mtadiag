@@ -17,7 +17,6 @@
 
 #include "Common.h"
 
-#define buffSize 255
 #define CUR_MTA_VERSIONS 5 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4
 
 #define MTAPathValue	"Last Install Location"
@@ -73,8 +72,8 @@ private:
 	static bool             ConcatenateLogs             ( void );
 
 	// used for storing environment variables & current system time
-	static char             tempDir[255];
-	static char             systemRoot[255];
+	static std::string      tempDir;
+	static std::string      systemRoot;
 	static SYSTEMTIME       sysTime;
 
 	// strings to store various paths

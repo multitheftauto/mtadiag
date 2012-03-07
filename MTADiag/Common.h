@@ -20,9 +20,8 @@
 #include <sstream>
 #include <fstream>
 #include <ostream>
-#include <cmath>
 
-#define VERSION "2.0.1"
+#define VERSION "2.0.2"
 
 #pragma warning( disable : 4996) // disable unsafe function use warning
 
