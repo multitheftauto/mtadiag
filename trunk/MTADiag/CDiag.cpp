@@ -18,8 +18,8 @@
 
 // initialize everything
 // used for storing environment variables & current system time
-char                         CDiag::tempDir[255];
-char                         CDiag::systemRoot[255];
+std::string                  CDiag::tempDir;
+std::string                  CDiag::systemRoot;
 SYSTEMTIME                   CDiag::sysTime;
 
 // strings to store various paths
@@ -43,9 +43,9 @@ bool                         CDiag::DXUpdated;						         // was DirectX upda
 void CDiag::Init ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
-	GetEnvironmentVariable ( "temp", tempDir, buffSize );           // get the temp directory
-	GetEnvironmentVariable ( "systemRoot", systemRoot, buffSize );  // get the WINDOWS directory
-	GetLocalTime ( &sysTime );                                      // get the current system time
+	tempDir = getenv ( "Temp" );			// get the Temp directory
+	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
+	GetLocalTime ( &sysTime );				// get the current system time
 
 	// generate necessary file paths (MTADiag's own log, dxdiag, nightly exe download, task list)
 	std::stringstream ss; // create a stringstream
