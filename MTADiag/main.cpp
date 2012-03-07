@@ -18,7 +18,7 @@
 int main()
 {
 	SetConsoleTitle ( "MTADiag v" VERSION );
-	cout << "MTADiag v" << VERSION << " by Towncivilian" << endl << endl;
+	std::cout << "MTADiag v" << VERSION << " by Towncivilian" << std::endl << std::endl;
 
 	CDiag::Init(); // begin diagnostics
 

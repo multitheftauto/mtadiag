@@ -13,67 +13,37 @@
 *****************************************************************************/ 
 
 #include "Curl.h"
+#include "curl/curl.h"
+#include "curl/types.h"
+#include "curl/easy.h"
+void progress_callback ( void* percent, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL );
 
-bool downloadFile(char *fileURL, string filePath)
+bool downloadFile ( std::string fileURL, std::string filePath )
 {
 	CURL *curl;
-    FILE *fp;
 	CURLcode res;
-	char *url;
-	url = new char[255];
-
-	url = fileURL;
-
 	curl = curl_easy_init();
-    if (curl)
+	if ( curl )
 	{
-        fp = fopen(filePath.c_str(),"wb");
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, FALSE);
-		// Install the callback function
-		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_func);
-        res = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        fclose(fp);
-
-		delete [] url;
-		return true;
+		FILE *fp;
+		fp = fopen ( filePath.c_str(),"wb" );
+		curl_easy_setopt ( curl, CURLOPT_URL, fileURL.c_str() );
+		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, fwrite );
+		curl_easy_setopt ( curl, CURLOPT_WRITEDATA, fp );
+		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE );
+		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback );
+		res = curl_easy_perform ( curl );
+		curl_easy_cleanup ( curl );
+		fclose ( fp );
 	}
+	if ( !res )
+		return true;
 	else
-	{
-		delete [] url;
 		return false;
-    }
 }
 
-size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    size_t written;
-    written = fwrite(ptr, size, nmemb, stream);
-    return written;
-}
-
-void progress_func(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
+void progress_callback ( void* percent, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL )
 {
-	// how wide you want the progress meter to be
-    int totaldotz = 20;
-    double fractiondownloaded = NowDownloaded / TotalToDownload;
-    // part of the progressmeter that's already "full"
-    double dotz = ceil(fractiondownloaded * totaldotz);
-
-    // create the "meter"
-    int ii=0;
-    printf("%3.0f%% [",fractiondownloaded*100);
-    // part  that's full already
-    for ( ; ii < dotz;ii++) {
-        printf("=");
-    }
-    // remaining part (spaces)
-    for ( ; ii < totaldotz;ii++) {
-        printf(" ");
-    }
-    // and back to line begin - do not forget the fflush to avoid output buffering problems!
-    printf("]\r");
-    fflush(stdout);
+	printf ( "Downloaded: %3.0f%%\r", CurrentDL/TotalToDL * 100 );
+	fflush ( stdout );
 }
