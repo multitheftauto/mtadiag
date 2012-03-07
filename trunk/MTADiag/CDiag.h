@@ -29,7 +29,7 @@
 #define MTAGTAPathValue  "GTA:SA Path"
 #define MTAGTAPathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\Common"
 
-#define MTAVerValue		"mta-version-ext"
+#define MTAVerValue    "mta-version-ext"
 #define MTA11VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1\\Settings\\general"
 #define MTA12VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2\\Settings\\general"
 #define MTA13VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3\\Settings\\general"
@@ -45,16 +45,16 @@ public:
 	static void             Init                        ( void );
 	static void             Destroy                     ( void );
 
-	static string           CDiag::diagLogPath;
+	static std::string      CDiag::diagLogPath;
 private:
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
 	static bool             PollMTAVersions             ( void );
 	static void             UserPickVersion             ( void );
 
 	// gather MTA's path and version, and GTA:SA's path
-	static string           GetMTAPath                  ( void );
-	static string           GetGamePath                 ( void );
-	static string           GetMTAVersion               ( void );
+	static std::string      GetMTAPath                  ( void );
+	static std::string      GetGamePath                 ( void );
+	static std::string      GetMTAVersion               ( void );
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
 	// and check if a D3D9.dll is present in the GTA:SA directory
@@ -78,18 +78,18 @@ private:
 	static SYSTEMTIME       sysTime;
 
 	// strings to store various paths
-	static string           nightlyPath;
-	static string           dxDiagLogPath;
-	static string           taskListPath;
-	static string           D3DX9_43Path;
-	static string           MTAPath;
-	static string           GTAPath;
+	static std::string      nightlyPath;
+	static std::string      dxDiagLogPath;
+	static std::string      taskListPath;
+	static std::string      D3DX9_43Path;
+	static std::string      MTAPath;
+	static std::string      GTAPath;
 
 	// store current MTA version when GetMTAVersion() is called, and store the original version to dump in the log file
-	static string           MTAVersion;
-	static string           OriginalMTAVersion;
+	static std::string      MTAVersion;
+	static std::string      OriginalMTAVersion;
 
-	static string           MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed
+	static std::string      MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed
 	static int              MTAVerChoice;                           // stores user's choice of which MTA version to diagnose
 
 	static bool             DXUpdated;                              // was DirectX updated by MTADiag?

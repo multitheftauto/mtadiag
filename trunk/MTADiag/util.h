@@ -16,6 +16,6 @@
 #define UTIL_H
 #include "Common.h"
 
-string			readRegKey			(string value, string subkey);
+std::string			readRegKey			(std::string value, std::string subkey);
 
 #endif

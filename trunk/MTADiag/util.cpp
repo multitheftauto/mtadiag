@@ -14,28 +14,19 @@
 
 #include "util.h"
 
-string readRegKey(string value, string subkey)
+std::string readRegKey(std::string value, std::string subkey)
 {
 	HKEY hKey = 0;
 	char buf[255] = {0};
-	DWORD dwType = 0;
+	DWORD dwType = 1;
 	DWORD dwBufSize = sizeof(buf);
-	char *cValue;
-	char *cSubkey;
-	cValue = new char[strlen(value.c_str())+1];
-	cSubkey = new char[strlen(subkey.c_str())+1];
 
-	strcpy (cValue, value.c_str());
-	strcpy (cSubkey, subkey.c_str());
-
-	if ( RegOpenKey(HKEY_LOCAL_MACHINE, cSubkey, &hKey) == ERROR_SUCCESS)
+	if ( RegOpenKey(HKEY_LOCAL_MACHINE, subkey.c_str(), &hKey) == ERROR_SUCCESS)
 	{
-		dwType = REG_SZ;
-		if ( RegQueryValueEx(hKey, cValue, 0, &dwType, (BYTE*)buf, &dwBufSize) == ERROR_SUCCESS)
+		if ( RegGetValue(HKEY_LOCAL_MACHINE, subkey.c_str(), value.c_str(), RRF_RT_REG_SZ, &dwType, (BYTE*)buf, &dwBufSize) == ERROR_SUCCESS)
 		{
-			string path(buf);
-			delete [] cValue;
-			delete [] cSubkey;
+			std::string path(buf);
+			RegCloseKey(hKey);
 			return path;
 		}
 		else
@@ -46,8 +37,6 @@ string readRegKey(string value, string subkey)
 	}
 	else
 	{
-		delete [] cValue;
-		delete [] cSubkey;
 		return "Failed to read key.";
 	}
 }

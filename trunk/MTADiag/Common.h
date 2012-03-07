@@ -21,9 +21,8 @@
 #include <fstream>
 #include <ostream>
 #include <cmath>
-using namespace std; // this is probably a stupid idea
 
-#define VERSION "2.0"
+#define VERSION "2.0.1"
 
 #pragma warning( disable : 4996) // disable unsafe function use warning
 
