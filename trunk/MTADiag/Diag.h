@@ -2,7 +2,7 @@
 * 
 * PROJECT: MTADiag
 * LICENSE: GNU GPL v3
-* FILE: CDiag.h
+* FILE: Diag.h
 * PURPOSE: Header for static diagnostic class
 * DEVELOPERS: Matthew "Towncivilian" Wolfe <ligushka@gmail.com>
 * 
@@ -12,8 +12,8 @@
 * 
 *****************************************************************************/ 
 
-#ifndef CDIAG_H
-#define CDIAG_H
+#ifndef DIAG_H
+#define DIAG_H
 
 #include "Common.h"
 
@@ -39,16 +39,16 @@
 #define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3-rc-latest"
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 
-class CDiag {
-public:
-	static void             Init                        ( void );
-	static void             Destroy                     ( void );
+namespace Diag {
 
-	static std::string      CDiag::diagLogPath;
-private:
+	void                    Init                        ( void );
+	void                    Destroy                     ( void );
+
+	static std::string      diagLogPath;
+
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
-	static bool             PollMTAVersions             ( void );
-	static void             UserPickVersion             ( void );
+	bool                    PollMTAVersions             ( void );
+	void                    UserPickVersion             ( void );
 
 	// gather MTA's path and version, and GTA:SA's path
 	static std::string      GetMTAPath                  ( void );
@@ -57,19 +57,19 @@ private:
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
 	// and check if a D3D9.dll is present in the GTA:SA directory
-	static bool             IsDirectXUpToDate           ( void );
-	static bool             CheckForD3D9                ( void );
+	bool                    IsDirectXUpToDate           ( void );
+	bool                    CheckForD3D9                ( void );
 
 	// update MTA:SA to the latest nightly/unstable build
 	// and update DirectX if necessary
-	static void             UpdateMTA                   ( void );
-	static void             UpdateDirectX               ( void );
+	void                    UpdateMTA                   ( void );
+	void                    UpdateDirectX               ( void );
 
 	// generate a DXDiag log, a list of currently running processes
 	// then concatenate those logs, MTA's logs, and some other miscellaneous info
-	static void             GenerateDXDiag              ( void );
-	static void             GenerateTaskList            ( void );
-	static bool             ConcatenateLogs             ( void );
+	void                    GenerateDXDiag              ( void );
+	void                    GenerateTaskList            ( void );
+	bool                    ConcatenateLogs             ( void );
 
 	// used for storing environment variables & current system time
 	static std::string      tempDir;
@@ -92,6 +92,6 @@ private:
 	static int              MTAVerChoice;                           // stores user's choice of which MTA version to diagnose
 
 	static bool             DXUpdated;                              // was DirectX updated by MTADiag?
-};
+}
 
 #endif

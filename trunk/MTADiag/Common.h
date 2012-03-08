@@ -21,7 +21,7 @@
 #include <fstream>
 #include <ostream>
 
-#define VERSION "2.0.2"
+#define VERSION "2.0.3"
 
 #pragma warning( disable : 4996) // disable unsafe function use warning
 

@@ -2,7 +2,7 @@
 * 
 * PROJECT: MTADiag
 * LICENSE: GNU GPL v3
-* FILE: CDiag.cpp
+* FILE: Diag.cpp
 * PURPOSE: MTA diagnostic tool
 * DEVELOPERS: Matthew "Towncivilian" Wolfe <ligushka@gmail.com>
 * 
@@ -12,40 +12,16 @@
 * 
 *****************************************************************************/ 
 
-#include "CDiag.h"
+#include "Diag.h"
 #include "Curl.h"
 #include "util.h"
 
-// initialize everything
-// used for storing environment variables & current system time
-std::string                  CDiag::tempDir;
-std::string                  CDiag::systemRoot;
-SYSTEMTIME                   CDiag::sysTime;
-
-// strings to store various paths
-std::string                  CDiag::diagLogPath;
-std::string                  CDiag::nightlyPath;
-std::string                  CDiag::dxDiagLogPath;
-std::string                  CDiag::taskListPath;
-std::string                  CDiag::D3DX9_43Path;
-std::string                  CDiag::MTAPath;
-std::string                  CDiag::GTAPath;
-
-// store current MTA version when GetMTAVersion() is called, and store the original version to dump in the log file
-std::string                  CDiag::MTAVersion;
-std::string                  CDiag::OriginalMTAVersion;
-
-std::string                  CDiag::MTAVersionsInstalled[CUR_MTA_VERSIONS];  // array to store paths of all MTA versions currently installed
-int                          CDiag::MTAVerChoice;                            // stores user's choice of which MTA version to diagnose
-
-bool                         CDiag::DXUpdated;						         // was DirectX updated by MTADiag?
-
-void CDiag::Init ( void )
+void Diag::Init ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
-	tempDir = getenv ( "Temp" );			// get the Temp directory
+	tempDir = getenv ( "Temp" );            // get the Temp directory
 	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
-	GetLocalTime ( &sysTime );				// get the current system time
+	GetLocalTime ( &sysTime );              // get the current system time
 
 	// generate necessary file paths (MTADiag's own log, dxdiag, nightly exe download, task list)
 	std::stringstream ss; // create a stringstream
@@ -112,7 +88,7 @@ void CDiag::Init ( void )
 	ConcatenateLogs();
 }
 
-void CDiag::Destroy ( void )
+void Diag::Destroy ( void )
 {
 	// clean up after ourselves
 	remove ( dxDiagLogPath.c_str() );
@@ -120,7 +96,7 @@ void CDiag::Destroy ( void )
 	remove ( taskListPath.c_str() );
 }
 
-bool CDiag::PollMTAVersions ( void )
+bool Diag::PollMTAVersions ( void )
 {
 	MTAVersionsInstalled[1] = readRegKey ( MTAPathValue, MTA11PathSubKey ); // store MTA 1.1 path, if present
 	MTAVersionsInstalled[2] = readRegKey ( MTAPathValue, MTA12PathSubKey ); // store MTA 1.2 path, if present
@@ -163,7 +139,7 @@ bool CDiag::PollMTAVersions ( void )
 		return false; // return false signifying that there are multiple versions of MTA:SA installed
 }
 
-void CDiag::UserPickVersion ( void )
+void Diag::UserPickVersion ( void )
 {
 	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to update and diagnose:" << std::endl;
 
@@ -185,7 +161,7 @@ void CDiag::UserPickVersion ( void )
 	} while ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice >= CUR_MTA_VERSIONS );
 }
 
-std::string CDiag::GetMTAPath ( void )
+std::string Diag::GetMTAPath ( void )
 {
 	switch ( MTAVerChoice )
 	{
@@ -209,13 +185,13 @@ std::string CDiag::GetMTAPath ( void )
 	return "Unable to read MTA path.";
 }
 
-std::string CDiag::GetGamePath( void )
+std::string Diag::GetGamePath( void )
 {
 	GTAPath = readRegKey ( MTAGTAPathValue, MTAGTAPathSubKey );
 	return GTAPath;
 }
 
-std::string CDiag::GetMTAVersion ( void )
+std::string Diag::GetMTAVersion ( void )
 {
 	switch ( MTAVerChoice )
 	{
@@ -239,7 +215,7 @@ std::string CDiag::GetMTAVersion ( void )
 	return "Unable to read MTA version.";
 }
 
-void CDiag::UpdateMTA ( void )
+void Diag::UpdateMTA ( void )
 {
 	std::cout << "MTA install path: " << GetMTAPath() << std::endl;
 	std::cout << "GTA install path: " << GTAPath << std::endl;
@@ -298,7 +274,7 @@ void CDiag::UpdateMTA ( void )
 		std::cout << "MTA version is now: " << GetMTAVersion() << std::endl << std::endl;
 }
 
-bool CDiag::IsDirectXUpToDate ( void )
+bool Diag::IsDirectXUpToDate ( void )
 {
 	std::ifstream ifile ( D3DX9_43Path.c_str() ); // check if D3DX9_43.dll is present in %systemroot%\system32 directory
 	if ( ifile )
@@ -307,7 +283,7 @@ bool CDiag::IsDirectXUpToDate ( void )
 		return false;
 }
 
-void CDiag::UpdateDirectX ( void )
+void Diag::UpdateDirectX ( void )
 {
 	std::string DXWebSetupPath;
 	std::stringstream ss; // create a stringstream
@@ -342,7 +318,7 @@ void CDiag::UpdateDirectX ( void )
 	remove( DXWebSetupPath.c_str() );
 }
 
-bool CDiag::CheckForD3D9 ( void )
+bool Diag::CheckForD3D9 ( void )
 {
 	SetCurrentDirectory( GTAPath.c_str() );
 
@@ -353,7 +329,7 @@ bool CDiag::CheckForD3D9 ( void )
 		return false;
 }
 
-void CDiag::GenerateDXDiag ( void )
+void Diag::GenerateDXDiag ( void )
 {
 	std::string DXLogPath;
 	std::stringstream ss; // create a stringstream
@@ -376,7 +352,7 @@ void CDiag::GenerateDXDiag ( void )
 		std::cout << "DXDiag log unable to be generated." << std::endl << std::endl;
 }
 
-void CDiag::GenerateTaskList ( void )
+void Diag::GenerateTaskList ( void )
 {
 	std::string TaskListPath;
 	std::stringstream ss; // create a stringstream
@@ -399,7 +375,7 @@ void CDiag::GenerateTaskList ( void )
 		std::cout << "Process list unable to be generated." << std::endl << std::endl;
 }
 
-bool CDiag::ConcatenateLogs ( void )
+bool Diag::ConcatenateLogs ( void )
 {
 	SetCurrentDirectory(  MTAPath.c_str() );
 
@@ -439,10 +415,10 @@ bool CDiag::ConcatenateLogs ( void )
 	out << "Old MTA version: " << OriginalMTAVersion << std::endl;
 	out << "MTA version: " << MTAVersion << std::endl;
 	std::string D3D9Present = ( CheckForD3D9() ) ? "Yes" : "No";
-    out << "D3D9.dll present: " << D3D9Present << std::endl;        // check if user has a D3D9.dll that he didn't delete per MTA's recommendation
-    std::string DirectXState = ( IsDirectXUpToDate() ) ? "Yes" : "No";
-    out << "DirectX up-to-date: " << DirectXState << std::endl;     // ensure DirectX is up-to-date
-    if ( DXUpdated == 1 )                                           // if DirectX was up-to-date already, no need to print this
+	out << "D3D9.dll present: " << D3D9Present << std::endl;        // check if user has a D3D9.dll that he didn't delete per MTA's recommendation
+	std::string DirectXState = ( IsDirectXUpToDate() ) ? "Yes" : "No";
+	out << "DirectX up-to-date: " << DirectXState << std::endl;     // ensure DirectX is up-to-date
+	if ( DXUpdated == 1 )                                           // if DirectX was up-to-date already, no need to print this
 		out << "DirectX was updated: Yes" << std::endl;
 	out << std::endl;
 
