@@ -13,18 +13,18 @@
 *****************************************************************************/ 
 
 #include "Common.h"
-#include "CDiag.h"
+#include "Diag.h"
 
 int main()
 {
 	SetConsoleTitle ( "MTADiag v" VERSION );
 	std::cout << "MTADiag v" << VERSION << " by Towncivilian" << std::endl << std::endl;
 
-	CDiag::Init(); // begin diagnostics
+	Diag::Init(); // begin diagnostics
 
-	CDiag::Destroy(); // remove temporary files (dxdiag.log, MTANightly.exe, tasklist.txt)
+	Diag::Destroy(); // remove temporary files (dxdiag.log, MTANightly.exe, tasklist.txt)
 
 	system ( "pause" ); // wait for user exit
 
-	remove ( CDiag::diagLogPath.c_str() ); // remove the generated MTADiag log
+	remove ( Diag::diagLogPath.c_str() ); // remove the generated MTADiag log
 };
