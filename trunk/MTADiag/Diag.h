@@ -44,9 +44,8 @@ namespace Diag {
 	void                    Init                        ( void );
 	void                    Destroy                     ( void );
 
-	static std::string      diagLogPath;
-
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
+	void                    GeneratePaths               ( void );
 	bool                    PollMTAVersions             ( void );
 	void                    UserPickVersion             ( void );
 
@@ -69,6 +68,8 @@ namespace Diag {
 	// then concatenate those logs, MTA's logs, and some other miscellaneous info
 	void                    GenerateDXDiag              ( void );
 	void                    GenerateTaskList            ( void );
+	void                    GetDirs                     ( void );
+	void                    GetCompatModeSettings       ( void );
 	bool                    ConcatenateLogs             ( void );
 
 	// used for storing environment variables & current system time
@@ -77,10 +78,21 @@ namespace Diag {
 	static SYSTEMTIME       sysTime;
 
 	// strings to store various paths
+	extern std::string      diagLogPath;
 	static std::string      nightlyPath;
 	static std::string      dxDiagLogPath;
 	static std::string      taskListPath;
+	static std::string      DirectoryListingPath;
+
+	static std::string      CompatModeRegPath1;
+	static std::string      CompatModeRegPath2;
+
+	static std::string      dirTempPath1;
+	static std::string      dirTempPath2;
+	static std::string      dirTempPath3;
+
 	static std::string      D3DX9_43Path;
+
 	static std::string      MTAPath;
 	static std::string      GTAPath;
 

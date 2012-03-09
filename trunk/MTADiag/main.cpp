@@ -14,6 +14,7 @@
 
 #include "Common.h"
 #include "Diag.h"
+extern std::string      Diag::diagLogPath;
 
 int main()
 {

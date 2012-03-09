@@ -16,59 +16,20 @@
 #include "Curl.h"
 #include "util.h"
 
+//#define SKIPUPDATE
+//#define SKIPDXDIAG
+
+std::string      Diag::diagLogPath; // because of extern
+
 void Diag::Init ( void )
 {
-	// obtain Temp and WINDOWS environment variables, and store system time
-	tempDir = getenv ( "Temp" );            // get the Temp directory
-	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
-	GetLocalTime ( &sysTime );              // get the current system time
-
-	// generate necessary file paths (MTADiag's own log, dxdiag, nightly exe download, task list)
-	std::stringstream ss; // create a stringstream
-
-	// append system time to MTADiag-Log filename
-	ss << tempDir << "\\MTADiag-Log-" << sysTime.wYear << "-" << sysTime.wMonth << "-" << sysTime.wDay << "_" << sysTime.wHour << "-" << sysTime.wMinute << "-" << sysTime.wSecond << ".txt";
-	diagLogPath = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	// append MTA nightly exe filename to temp directory path
-	ss << tempDir << "\\MTANightly.exe";
-	nightlyPath = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	// append dxdiag filename to temp directory path
-	ss << tempDir << "\\dxdiag.log";
-	dxDiagLogPath = ss.str();
-
-	// clear the stringstream
-	ss.str( "");
-	ss.clear();
-
-	// append tasklist filename to temp directory path
-	ss << tempDir << "\\tasklist.txt";
-	taskListPath = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	// append D3DX9_43.dll filename to system32 directory path
-	ss << systemRoot << "\\system32\\D3DX9_43.dll";
-	D3DX9_43Path = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
+	// obtain necessary environment variables and generate filepaths used for temporary files
+	GeneratePaths();
 
 	// poll all currently installed MTA versions; if there is more than one installed, ask the user to pick one
 	if ( !PollMTAVersions() )
 		UserPickVersion();
+
 	// obtain GTA:SA's path and MTA's version
 	GetGamePath();
 	GetMTAVersion();
@@ -83,8 +44,13 @@ void Diag::Init ( void )
 	else { UpdateDirectX(); DXUpdated = 1; }
 
 	// generate a DXDiag log, a list of currently running processes, then concatenate those logs, MTA's logs, and some other miscellaneous info
+	std::cout << "Gathering information. Please wait..." << std::endl << std::endl;
+#ifndef SKIPDXDIAG
 	GenerateDXDiag();
+#endif
 	GenerateTaskList();
+	GetCompatModeSettings();
+	GetDirs();
 	ConcatenateLogs();
 }
 
@@ -94,6 +60,12 @@ void Diag::Destroy ( void )
 	remove ( dxDiagLogPath.c_str() );
 	remove ( nightlyPath.c_str() );
 	remove ( taskListPath.c_str() );
+	remove ( DirectoryListingPath.c_str() );
+	remove ( CompatModeRegPath1.c_str() );
+	remove ( CompatModeRegPath2.c_str() );
+	remove ( dirTempPath1.c_str() );
+	remove ( dirTempPath2.c_str() );
+	remove ( dirTempPath3.c_str() );
 }
 
 bool Diag::PollMTAVersions ( void )
@@ -241,7 +213,7 @@ void Diag::UpdateMTA ( void )
 		url = MTA14NightlyURL;
 		break;
 	}
-
+#ifndef SKIPUPDATE
 	if ( downloadFile (url, nightlyPath) )
 	{
 		std::ifstream ifile ( nightlyPath.c_str() );
@@ -259,7 +231,7 @@ void Diag::UpdateMTA ( void )
 		ShellExecute ( NULL, "open", url.c_str(), NULL, NULL, SW_HIDE );
 		std::cout << std::endl << "Install the patch. ";
 	}
-
+#endif
 	std::cout << "If MTA works now, enter 'y' to quit MTADiag." << std::endl << "If it doesn't, enter 'n' to continue diagnostics." << std::endl;
 	std::cin >> works;
 
@@ -341,15 +313,9 @@ void Diag::GenerateDXDiag ( void )
 	ss.str ("");
 	ss.clear();
 
-	std::cout << "Generating DXDiag log. Please wait." << std::endl;
+	std::cout << "Generating DXDiag log..." << std::endl;
 
-	system( DXLogPath.c_str() ); // cook up dxdiag log
-
-	std::ifstream ifile( dxDiagLogPath.c_str() );
-	if ( ifile )
-		std::cout << "DXDiag log generated successfully." << std::endl << std::endl;
-	else
-		std::cout << "DXDiag log unable to be generated." << std::endl << std::endl;
+	system ( DXLogPath.c_str() ); // cook up dxdiag log
 }
 
 void Diag::GenerateTaskList ( void )
@@ -364,20 +330,87 @@ void Diag::GenerateTaskList ( void )
 	ss.str ("");
 	ss.clear();
 
-	std::cout << "Generating list of running processes. Please wait." << std::endl;
+	system ( TaskListPath.c_str() ); // cook up list of currently running processes
+}
 
-	system( TaskListPath.c_str() ); // cook up list of currently running processes
+void Diag::GetCompatModeSettings ( void )
+{
+	std::string RegPath1;
+	std::string RegPath2;
+	std::stringstream ss; // create a stringstream
 
-	std::ifstream ifile ( taskListPath.c_str() );
-	if ( ifile )
-		std::cout << "Process list generated successfully." << std::endl << std::endl;
-	else
-		std::cout << "Process list unable to be generated." << std::endl << std::endl;
+	ss << "regedit /e /a " << CompatModeRegPath1.c_str() << " \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\"";
+	RegPath1 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	ss << "regedit /e /a " << CompatModeRegPath2.c_str() << " \"HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\"";
+	RegPath2 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	system ( RegPath1.c_str() );
+	system ( RegPath2.c_str() );
+}
+
+void Diag::GetDirs ( void )
+{
+	std::string dirPath1;
+	std::string dirPath2;
+	std::string dirPath3;
+	std::string GTAModelsPath;
+	std::string MTAInnerPath;
+	std::stringstream ss; // create a stringstream
+
+	// append "\models" to GTA path
+	ss << GTAPath << "\\models";
+	GTAModelsPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append "\MTA" to MTA path
+	ss << MTAPath << "\\MTA";
+	MTAInnerPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	ss << "dir \"" << MTAInnerPath << "\" >\"" << dirTempPath1 << "\"";
+	dirPath1 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	ss << "dir \"" << GTAPath << "\" >\"" << dirTempPath2 << "\"";
+	dirPath2 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	ss << "dir \"" << GTAModelsPath << "\" >\"" << dirTempPath3 << "\"";
+	dirPath3 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	system ( dirPath1.c_str() );
+	system ( dirPath2.c_str() );
+	system ( dirPath3.c_str() );
 }
 
 bool Diag::ConcatenateLogs ( void )
 {
-	SetCurrentDirectory(  MTAPath.c_str() );
+	SetCurrentDirectory ( MTAPath.c_str() );
 
 	std::ifstream dxdiag ( dxDiagLogPath.c_str(), std::ios::in | std::ios::binary );
 	if ( !dxdiag )
@@ -398,6 +431,26 @@ bool Diag::ConcatenateLogs ( void )
 	std::ifstream logfile ( "MTA\\logfile.txt", std::ios::in | std::ios::binary );
 	if ( !logfile )
 		std::cout << "No logfile.txt present. Have you tried launching MTA:SA at least once?" << std::endl;
+
+	std::ifstream reg1 ( CompatModeRegPath1.c_str(), std::ios::in | std::ios::binary );
+	if ( !reg1 )
+		std::cout << "Can't open RegCompat1.txt." << std::endl;
+
+	std::ifstream reg2 ( CompatModeRegPath2.c_str(), std::ios::in | std::ios::binary );
+	if ( !reg2 )
+		std::cout << "Can't open RegCompat2.txt." << std::endl;
+
+	std::ifstream mtadir ( dirTempPath1.c_str(), std::ios::in | std::ios::binary );
+	if ( !mtadir )
+		std::cout << "Can't open mtadir.txt." << std::endl;
+
+	std::ifstream gtadir ( dirTempPath2.c_str(), std::ios::in | std::ios::binary );
+	if ( !gtadir )
+		std::cout << "Can't open gtadir.txt." << std::endl;
+
+	std::ifstream gtamodelsdir ( dirTempPath3.c_str(), std::ios::in | std::ios::binary );
+	if ( !gtamodelsdir )
+		std::cout << "Can't open gtamodelsdir.txt." << std::endl;
 
 	std::ofstream out ( diagLogPath.c_str(), std::ios::out | std::ios::binary );
 
@@ -453,15 +506,149 @@ bool Diag::ConcatenateLogs ( void )
 	{
 	out << "logfile.txt:" << std::endl << std::endl;
 	out << logfile.rdbuf() << std::flush;
+	out << std::endl << std::endl;
 	logfile.close();
+	}
+	if ( reg1 )
+	{
+	out << "Compatibility registry entries 1:" << std::endl << std::endl;
+	out << reg1.rdbuf() << std::flush;
+	reg1.close();
+	}
+	if ( reg2 )
+	{
+	out << "Compatibility registry entries 2:" << std::endl << std::endl;
+	out << reg2.rdbuf() << std::flush;
+	reg2.close();
+	out << std::endl;
+	}
+	if ( mtadir )
+	{
+	out << "MTA directory listing:" << std::endl << std::endl;
+	out << mtadir.rdbuf() << std::flush;
+	mtadir.close();
+	out << std::endl << std::endl;
+	}
+	if ( gtadir )
+	{
+	out << "GTA directory listing:" << std::endl << std::endl;
+	out << gtadir.rdbuf() << std::flush;
+	gtadir.close();
+	out << std::endl<< std::endl;
+	}
+	if ( gtamodelsdir )
+	{
+	out << "GTA\\models directory listing:" << std::endl << std::endl;
+	out << gtamodelsdir.rdbuf() << std::flush;
+	gtamodelsdir.close();
 	}
 
 	out.close();
 
 	std::cout << "Log files merged." << std::endl << std::endl;
 	std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
-	std::cout << "Include the pastebin link in your forum post." << std::endl;
+	std::cout << "Include the Pastebin link in your forum post." << std::endl;
 	ShellExecute ( NULL, "open", "wordpad.exe", diagLogPath.c_str(), NULL, SW_SHOW );
 
 	return true;
+}
+
+void Diag::GeneratePaths ( void )
+{
+	// obtain Temp and WINDOWS environment variables, and store system time
+	tempDir = getenv ( "Temp" );            // get the Temp directory
+	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
+	GetLocalTime ( &sysTime );              // get the current system time
+
+	// generate necessary file paths
+
+	std::stringstream ss;
+
+	// append system time to MTADiag-Log filename
+	ss << tempDir << "\\MTADiag-Log-" << sysTime.wYear << "-" << sysTime.wMonth << "-" << sysTime.wDay << "_" << sysTime.wHour << "-" << sysTime.wMinute << "-" << sysTime.wSecond << ".txt";
+	diagLogPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append MTA nightly exe filename to temp directory path
+	ss << tempDir << "\\MTANightly.exe";
+	nightlyPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append dxdiag filename to temp directory path
+	ss << tempDir << "\\dxdiag.log";
+	dxDiagLogPath = ss.str();
+
+	// clear the stringstream
+	ss.str( "");
+	ss.clear();
+
+	// append tasklist filename to temp directory path
+	ss << tempDir << "\\tasklist.txt";
+	taskListPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append directory listing filename to temp directory path
+	ss << tempDir << "\\DirectoryListing.txt";
+	DirectoryListingPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append directory listing filename to temp directory path
+	ss << tempDir << "\\mtadir.txt";
+	dirTempPath1 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append directory listing filename to temp directory path
+	ss << tempDir << "\\gtadir.txt";
+	dirTempPath2 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append directory listing filename to temp directory path
+	ss << tempDir << "\\gtamodelsdir.txt";
+	dirTempPath3 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append compatibility mode registry entry filename to temp directory path
+	ss << tempDir << "\\RegCompat1.txt";
+	CompatModeRegPath1 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append compatibility mode registry entry filename to temp directory path
+	ss << tempDir << "\\RegCompat2.txt";
+	CompatModeRegPath2 = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append D3DX9_43.dll filename to system32 directory path
+	ss << systemRoot << "\\system32\\D3DX9_43.dll";
+	D3DX9_43Path = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
 }
