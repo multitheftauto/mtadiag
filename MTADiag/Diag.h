@@ -39,6 +39,9 @@
 #define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3-rc-latest"
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 
+#define CompatModeRegKey1 "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
+#define CompatModeRegKey2 "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
+
 namespace Diag {
 
 	void                    Init                        ( void );
@@ -54,10 +57,7 @@ namespace Diag {
 	static std::string      GetGamePath                 ( void );
 	static std::string      GetMTAVersion               ( void );
 
-	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
-	// and check if a D3D9.dll is present in the GTA:SA directory
-	bool                    IsDirectXUpToDate           ( void );
-	bool                    CheckForD3D9                ( void );
+	bool                    CheckForFile                ( std::string );
 
 	// update MTA:SA to the latest nightly/unstable build
 	// and update DirectX if necessary
@@ -69,7 +69,8 @@ namespace Diag {
 	void                    GenerateDXDiag              ( void );
 	void                    GenerateTaskList            ( void );
 	void                    GetDirs                     ( void );
-	void                    GetCompatModeSettings       ( void );
+	void                    ExportRegKey                ( std::string );
+	void                    PerformWMIC                 ( std::string, std::string = "" );
 	bool                    ConcatenateLogs             ( void );
 
 	// used for storing environment variables & current system time
@@ -84,8 +85,9 @@ namespace Diag {
 	static std::string      taskListPath;
 	static std::string      DirectoryListingPath;
 
-	static std::string      CompatModeRegPath1;
-	static std::string      CompatModeRegPath2;
+	static std::string      RegistryExportPath;
+	static std::string      WMICPathUnicode;
+	static std::string      WMICPath;
 
 	static std::string      dirTempPath1;
 	static std::string      dirTempPath2;

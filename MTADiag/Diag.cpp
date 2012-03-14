@@ -40,7 +40,7 @@ void Diag::Init ( void )
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
 	// and check if a D3D9.dll is present in the GTA:SA directory
-	if ( IsDirectXUpToDate() ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
+	if ( CheckForFile( D3DX9_43Path ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
 
 	// generate a DXDiag log, a list of currently running processes, then concatenate those logs, MTA's logs, and some other miscellaneous info
@@ -49,7 +49,7 @@ void Diag::Init ( void )
 	GenerateDXDiag();
 #endif
 	GenerateTaskList();
-	GetCompatModeSettings();
+	PerformWMIC("Win32_VideoController");
 	GetDirs();
 	ConcatenateLogs();
 }
@@ -61,8 +61,8 @@ void Diag::Destroy ( void )
 	remove ( nightlyPath.c_str() );
 	remove ( taskListPath.c_str() );
 	remove ( DirectoryListingPath.c_str() );
-	remove ( CompatModeRegPath1.c_str() );
-	remove ( CompatModeRegPath2.c_str() );
+	remove ( RegistryExportPath.c_str() );
+	remove ( WMICPath.c_str() );
 	remove ( dirTempPath1.c_str() );
 	remove ( dirTempPath2.c_str() );
 	remove ( dirTempPath3.c_str() );
@@ -246,9 +246,11 @@ void Diag::UpdateMTA ( void )
 		std::cout << "MTA version is now: " << GetMTAVersion() << std::endl << std::endl;
 }
 
-bool Diag::IsDirectXUpToDate ( void )
+bool Diag::CheckForFile ( std::string FilePath )
 {
-	std::ifstream ifile ( D3DX9_43Path.c_str() ); // check if D3DX9_43.dll is present in %systemroot%\system32 directory
+	SetCurrentDirectory( GTAPath.c_str() );
+
+	std::ifstream ifile ( FilePath.c_str() ); // check if D3DX9_43.dll is present in %systemroot%\system32 directory
 	if ( ifile )
 		return true;
 	else
@@ -290,17 +292,6 @@ void Diag::UpdateDirectX ( void )
 	remove( DXWebSetupPath.c_str() );
 }
 
-bool Diag::CheckForD3D9 ( void )
-{
-	SetCurrentDirectory( GTAPath.c_str() );
-
-	std::ifstream ifile ( "D3D9.dll" ); // check if D3D9.dll is present in GTASA directory
-	if ( ifile )
-		return true;
-	else
-		return false;
-}
-
 void Diag::GenerateDXDiag ( void )
 {
 	std::string DXLogPath;
@@ -333,28 +324,38 @@ void Diag::GenerateTaskList ( void )
 	system ( TaskListPath.c_str() ); // cook up list of currently running processes
 }
 
-void Diag::GetCompatModeSettings ( void )
+void Diag::ExportRegKey ( std::string subkey )
 {
-	std::string RegPath1;
-	std::string RegPath2;
+	std::string ExportReg;
 	std::stringstream ss; // create a stringstream
 
-	ss << "regedit /e /a " << CompatModeRegPath1.c_str() << " \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\"";
-	RegPath1 = ss.str();
+	ss << "regedit /e /a " << RegistryExportPath.c_str() << " \"" << subkey << "\"";
+	ExportReg = ss.str();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
-	ss << "regedit /e /a " << CompatModeRegPath2.c_str() << " \"HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\"";
-	RegPath2 = ss.str();
+	system ( ExportReg.c_str() );
+}
+
+void Diag::PerformWMIC ( std::string arg1, std::string arg2 )
+{
+	std::string WMIC;
+	std::stringstream ss; // create a stringstream
+
+	ss << "wmic Path " << arg1.c_str() << " Get " << arg2 << " >" << WMICPathUnicode;
+	WMIC = ss.str ();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
-	system ( RegPath1.c_str() );
-	system ( RegPath2.c_str() );
+	system ( WMIC.c_str() );
+
+	ConvertUnicodeToASCII ( WMICPathUnicode, WMICPath );
+
+	remove ( WMICPathUnicode.c_str() );
 }
 
 void Diag::GetDirs ( void )
@@ -432,13 +433,9 @@ bool Diag::ConcatenateLogs ( void )
 	if ( !logfile )
 		std::cout << "No logfile.txt present. Have you tried launching MTA:SA at least once?" << std::endl;
 
-	std::ifstream reg1 ( CompatModeRegPath1.c_str(), std::ios::in | std::ios::binary );
-	if ( !reg1 )
-		std::cout << "Can't open RegCompat1.txt." << std::endl;
-
-	std::ifstream reg2 ( CompatModeRegPath2.c_str(), std::ios::in | std::ios::binary );
-	if ( !reg2 )
-		std::cout << "Can't open RegCompat2.txt." << std::endl;
+	std::ifstream wmic ( WMICPath.c_str(), std::ios::in | std::ios::binary );
+	if ( !wmic )
+		std::cout << "Can't open WMIC.txt." << std::endl;
 
 	std::ifstream mtadir ( dirTempPath1.c_str(), std::ios::in | std::ios::binary );
 	if ( !mtadir )
@@ -467,9 +464,9 @@ bool Diag::ConcatenateLogs ( void )
 	out << "GTA path: " << GTAPath << std::endl;
 	out << "Old MTA version: " << OriginalMTAVersion << std::endl;
 	out << "MTA version: " << MTAVersion << std::endl;
-	std::string D3D9Present = ( CheckForD3D9() ) ? "Yes" : "No";
+	std::string D3D9Present = ( CheckForFile( "D3D9.dll" ) ) ? "Yes" : "No";
 	out << "D3D9.dll present: " << D3D9Present << std::endl;        // check if user has a D3D9.dll that he didn't delete per MTA's recommendation
-	std::string DirectXState = ( IsDirectXUpToDate() ) ? "Yes" : "No";
+	std::string DirectXState = ( CheckForFile( D3DX9_43Path ) ) ? "Yes" : "No";
 	out << "DirectX up-to-date: " << DirectXState << std::endl;     // ensure DirectX is up-to-date
 	if ( DXUpdated == 1 )                                           // if DirectX was up-to-date already, no need to print this
 		out << "DirectX was updated: Yes" << std::endl;
@@ -509,19 +506,43 @@ bool Diag::ConcatenateLogs ( void )
 	out << std::endl << std::endl;
 	logfile.close();
 	}
-	if ( reg1 )
+
+	// not the greatest time to do these, but meh
+	
+	ExportRegKey ( CompatModeRegKey1 );
+
+	std::ifstream reg1 ( RegistryExportPath.c_str(), std::ios::in | std::ios::binary );
+	if ( !reg1 )
+		std::cout << "Can't open RegistryExport.txt." << std::endl;
+	else
 	{
-	out << "Compatibility registry entries 1:" << std::endl << std::endl;
-	out << reg1.rdbuf() << std::flush;
-	reg1.close();
+		out << "Compatibility registry entries 1:" << std::endl << std::endl;
+		out << reg1.rdbuf() << std::flush;
+		reg1.close();
+		out << std::endl;
 	}
-	if ( reg2 )
+
+	ExportRegKey ( CompatModeRegKey2 );
+
+	std::ifstream reg2 ( RegistryExportPath.c_str(), std::ios::in | std::ios::binary );
+	if ( !reg2 )
+		std::cout << "Can't open RegistryExport.txt." << std::endl;
+	else
 	{
-	out << "Compatibility registry entries 2:" << std::endl << std::endl;
-	out << reg2.rdbuf() << std::flush;
-	reg2.close();
-	out << std::endl;
+		out << "Compatibility registry entries 2:" << std::endl << std::endl;
+		out << reg2.rdbuf() << std::flush;
+		reg2.close();
+		out << std::endl;
 	}
+
+	if ( wmic )
+	{
+	out << "WMIC Path Win32_VideoController Get:" << std::endl << std::endl;
+	out << wmic.rdbuf() << std::flush;
+	wmic.close();
+	out << std::endl << std::endl;
+	}
+
 	if ( mtadir )
 	{
 	out << "MTA directory listing:" << std::endl << std::endl;
@@ -629,16 +650,24 @@ void Diag::GeneratePaths ( void )
 	ss.clear();
 
 	// append compatibility mode registry entry filename to temp directory path
-	ss << tempDir << "\\RegCompat1.txt";
-	CompatModeRegPath1 = ss.str();
+	ss << tempDir << "\\RegistryExport.txt";
+	RegistryExportPath = ss.str();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
 	// append compatibility mode registry entry filename to temp directory path
-	ss << tempDir << "\\RegCompat2.txt";
-	CompatModeRegPath2 = ss.str();
+	ss << tempDir << "\\WMICUni.txt";
+	WMICPathUnicode = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	// append compatibility mode registry entry filename to temp directory path
+	ss << tempDir << "\\WMIC.txt";
+	WMICPath = ss.str();
 
 	// clear the stringstream
 	ss.str ("");

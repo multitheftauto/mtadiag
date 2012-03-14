@@ -3,7 +3,7 @@
 * PROJECT: MTADiag
 * LICENSE: GNU GPL v3
 * FILE: util.cpp
-* PURPOSE: Utility function(s)
+* PURPOSE: Utility functions
 * DEVELOPERS: Matthew "Towncivilian" Wolfe <ligushka@gmail.com>
 * 
 * 
@@ -39,4 +39,19 @@ std::string readRegKey ( std::string value, std::string subkey )
 	{
 		return "Failed to read key.";
 	}
+}
+
+void ConvertUnicodeToASCII ( std::string file1, std::string file2 )
+{
+	std::stringstream ss; // create a stringstream
+	std::string convert;
+
+	ss << "TYPE " << file1 << " > " << file2;
+	convert = ss.str ();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	system ( convert.c_str() );
 }
