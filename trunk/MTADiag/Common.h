@@ -20,7 +20,7 @@
 #include <sstream>
 #include <fstream>
 
-#define VERSION "2.1"
+#define VERSION "2.1.1"
 
 #pragma warning ( disable : 4996) // disable unsafe function use warning
 
