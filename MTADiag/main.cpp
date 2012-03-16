@@ -14,7 +14,7 @@
 
 #include "Common.h"
 #include "Diag.h"
-extern std::string      Diag::diagLogPath;
+extern std::vector<std::string>      Diag::files;
 
 int main()
 {
@@ -27,5 +27,5 @@ int main()
 
 	system ( "pause" ); // wait for user exit
 
-	remove ( Diag::diagLogPath.c_str() ); // remove the generated MTADiag log
+	remove ( Diag::files[0].c_str() ); // remove the generated MTADiag log
 };

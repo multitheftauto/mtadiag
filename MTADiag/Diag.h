@@ -57,8 +57,6 @@ namespace Diag {
 	static std::string      GetGamePath                 ( void );
 	static std::string      GetMTAVersion               ( void );
 
-	bool                    CheckForFile                ( std::string );
-
 	// update MTA:SA to the latest nightly/unstable build
 	// and update DirectX if necessary
 	void                    UpdateMTA                   ( void );
@@ -66,11 +64,10 @@ namespace Diag {
 
 	// generate a DXDiag log, a list of currently running processes
 	// then concatenate those logs, MTA's logs, and some other miscellaneous info
-	void                    GenerateDXDiag              ( void );
-	void                    GenerateTaskList            ( void );
+	void                    DoSystemCommandWithOutput   ( std::string command, std::string outputfile );
 	void                    GetDirs                     ( void );
 	void                    ExportRegKey                ( std::string );
-	void                    PerformWMIC                 ( std::string, std::string = "" );
+	void                    QueryWMIC                 ( std::string, std::string = "" );
 	bool                    ConcatenateLogs             ( void );
 
 	// used for storing environment variables & current system time
@@ -78,22 +75,7 @@ namespace Diag {
 	static std::string      systemRoot;
 	static SYSTEMTIME       sysTime;
 
-	// strings to store various paths
-	extern std::string      diagLogPath;
-	static std::string      nightlyPath;
-	static std::string      dxDiagLogPath;
-	static std::string      taskListPath;
-	static std::string      DirectoryListingPath;
-
-	static std::string      RegistryExportPath;
-	static std::string      WMICPathUnicode;
-	static std::string      WMICPath;
-
-	static std::string      dirTempPath1;
-	static std::string      dirTempPath2;
-	static std::string      dirTempPath3;
-
-	static std::string      D3DX9_43Path;
+	extern std::vector<std::string> files;
 
 	static std::string      MTAPath;
 	static std::string      GTAPath;

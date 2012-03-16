@@ -41,6 +41,15 @@ std::string readRegKey ( std::string value, std::string subkey )
 	}
 }
 
+bool CheckForFile ( std::string FilePath )
+{
+	std::ifstream ifile ( FilePath.c_str() );
+	if ( ifile )
+		return true;
+	else
+		return false;
+}
+
 void ConvertUnicodeToASCII ( std::string file1, std::string file2 )
 {
 	std::stringstream ss; // create a stringstream
