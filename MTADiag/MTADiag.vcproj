@@ -173,11 +173,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\CDiag.cpp"
+				RelativePath=".\Curl.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Curl.cpp"
+				RelativePath=".\Diag.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Log.cpp"
 				>
 			</File>
 			<File
@@ -195,15 +199,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\CDiag.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Common.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Curl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Diag.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Log.h"
 				>
 			</File>
 			<File

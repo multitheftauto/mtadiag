@@ -23,7 +23,7 @@ int main()
 
 	Diag::Init(); // begin diagnostics
 
-	Diag::Destroy(); // remove temporary files (dxdiag.log, MTANightly.exe, tasklist.txt)
+	Diag::Destroy(); // remove temporary files
 
 	system ( "pause" ); // wait for user exit
 
