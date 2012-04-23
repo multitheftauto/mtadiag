@@ -18,8 +18,7 @@
 
 //#define SKIPUPDATE
 //#define SKIPDXDIAG
-//#define DEBUGOUTPUT
-//#define VERBOSE // controls output of whether files are present during concatenation - the user doesn't really give a shit, no need to give them this info
+//#define DEBUGOUTPUT // output contents of files vector
 
 std::vector<std::string>      Diag::files;
 
@@ -27,6 +26,11 @@ void Diag::Init ( void )
 {
 	// obtain necessary environment variables and generate filepaths used for temporary files
 	GeneratePaths();
+
+	Log::Open ( files[0] ); // create the log file and open it
+
+	Log::WriteStringToLog ( "MTADiag v", VERSION, false );
+	Log::WriteStringToLog ( " by Towncivilian" );
 
 	// poll all currently installed MTA versions; if there is more than one installed, ask the user to pick one
 	if ( !PollMTAVersions() )
@@ -40,27 +44,62 @@ void Diag::Init ( void )
 	// update MTA to latest nightly/unstable build
 	UpdateMTA();
 
+	// write a bunch of information to the log file since we just collected it
+	Log::WriteStringToLog ( "MTA path:            ", MTAPath );
+	Log::WriteStringToLog ( "Old MTA version:     ", OriginalMTAVersion );
+	Log::WriteStringToLog ( "MTA version:         ", MTAVersion );
+	Log::WriteStringToLog ( "GTA path:            ", GTAPath );
+	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
+	Log::WriteStringToLog ( "D3D9.dll present:    ", D3D9Present );
+
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
-	if ( CheckForFile( files[8].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
+	if ( CheckForFile( files[6].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
 
-	// generate a DXDiag log, a list of currently running processes, then concatenate those logs, MTA's logs, and some other miscellaneous info
+	// more DirectX stuff
+	std::string DirectXState = ( CheckForFile ( files[6] ) ) ? "Yes" : "No";
+	Log::WriteStringToLog ( "DirectX up-to-date:  ", DirectXState );
+	if ( DXUpdated == 1)
+		Log::WriteStringToLog ( "DirectX was updated: Yes");
+	Log::WriteStringToLog ( "" );
+
+	// collect a bunch of information and output to log file
 	std::cout << "Gathering information. Please wait..." << std::endl << std::endl;
 
 #ifndef SKIPDXDIAG
 	DoSystemCommandWithOutput ( "dxdiag /t ", files[1] );
 #endif
 	DoSystemCommandWithOutput ( "tasklist >", files[2] );
-	QueryWMIC ("Win32_VideoController");
-	GetDirs();
-	ConcatenateLogs();
+	DoSystemCommandWithOutput ( "ipconfig /all >", files[9] );
+
+	SetCurrentDirectory ( MTAPath.c_str() );
+
+	Log::WriteFileToLog ( "MTA\\core.log", "core.log" );
+	Log::WriteFileToLog ( "MTA\\logfile.txt", "logfile.txt" );
+	Log::WriteFileToLog ( "MTA\\CEGUI.log", "CEGUI.log" );
+
+	QueryWMIC ( "Win32_VideoController" );
+	ExportRegKey ( CompatModeRegKey1 );
+	ExportRegKey ( CompatModeRegKey2 );
+
+	GetDir ( ( MTAPath + "\\MTA" ) );
+	GetDir ( GTAPath );
+	GetDir ( ( GTAPath + "\\models" ) );
+
+	// close the log file for writing
+	Log::Close();
+
+	std::cout << "Log file generated." << std::endl << std::endl;
+	std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
+	std::cout << "Include the Pastebin link in your forum post." << std::endl;
+	ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
 }
 
 void Diag::Destroy ( void )
 {
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
-	for (int i = 1; i < (signed)files.size(); i++)
+	for (int i = 1; i < ( signed ) files.size(); i++)
 		remove ( files[i].c_str() );
 }
 
@@ -85,16 +124,15 @@ void Diag::GeneratePaths ( void )
 	files.push_back ( tempDir + "\\dxdiag.log" ); // files[1] ...
 	files.push_back ( tempDir + "\\tasklist.txt" );
 	files.push_back ( tempDir + "\\WMIC.txt" );
-	files.push_back ( tempDir + "\\mtadir.txt" );
-	files.push_back ( tempDir + "\\gtadir.txt" );
-	files.push_back ( tempDir + "\\gtamodels.txt" );
+	files.push_back ( tempDir + "\\directory.txt" );
 	files.push_back ( tempDir + "\\regexport.txt" );
 	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" );
 	files.push_back ( tempDir + "\\MTANightly.exe" );
 	files.push_back ( tempDir + "\\WMICUni.txt" );
+	files.push_back ( tempDir + "\\ipconfig.txt" );
 
 #ifdef DEBUGOUTPUT
-	for (int i = 0; i < (signed)files.size(); i++)
+	for ( int i = 0; i < ( signed ) files.size(); i++ )
 		std::cout << i << " " << files[i] << std::endl;
 #endif
 }
@@ -105,6 +143,7 @@ bool Diag::PollMTAVersions ( void )
 	MTAVersionsInstalled[2] = readRegKey ( MTAPathValue, MTA12PathSubKey ); // store MTA 1.2 path, if present
 	MTAVersionsInstalled[3] = readRegKey ( MTAPathValue, MTA13PathSubKey ); // store MTA 1.3 path, if present
 	MTAVersionsInstalled[4] = readRegKey ( MTAPathValue, MTA14PathSubKey ); // store MTA 1.4 path, if present
+	MTAVersionsInstalled[5] = readRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.4 path, if present
 
 	// if a version isn't installed, "Failed to get key." is returned by readRegKey; clear that array element
 	for ( int i = 1; i < CUR_MTA_VERSIONS; i++ )
@@ -184,6 +223,10 @@ std::string Diag::GetMTAPath ( void )
 		MTAPath = readRegKey ( MTAPathValue, MTA14PathSubKey );
 		return MTAPath;
 		break;
+	case 5:
+		MTAPath = readRegKey ( MTAPathValue, MTA15PathSubKey );
+		return MTAPath;
+		break;
 	}
 	return "Unable to read MTA path.";
 }
@@ -206,6 +249,10 @@ std::string Diag::GetMTAVersion ( void )
 		break;
 	case 4:
 		MTAVersion = readRegKey ( MTAVerValue, MTA14VerSubKey );
+		return MTAVersion;
+		break;
+	case 5:
+		MTAVersion = readRegKey ( MTAVerValue, MTA15VerSubKey );
 		return MTAVersion;
 		break;
 	}
@@ -244,17 +291,20 @@ void Diag::UpdateMTA ( void )
 	case 4:
 		url = MTA14NightlyURL;
 		break;
+	case 5:
+		url = MTA15NightlyURL;
+		break;
 	}
 
 #ifndef SKIPUPDATE
-	if ( downloadFile (url, files[9].c_str() ) )
+	if ( downloadFile (url, files[7].c_str() ) )
 	{
-		std::ifstream ifile ( files[9].c_str()  );
+		std::ifstream ifile ( files[7].c_str()  );
 		if ( ifile )
 		{
 			std::cout << std::endl << "Launching the installer..." << std::endl;
 			std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
-			system ( files[9].c_str()  );
+			system ( files[7].c_str()  );
 		}
 	}
 	else
@@ -311,6 +361,8 @@ void Diag::UpdateDirectX ( void )
 void Diag::DoSystemCommandWithOutput ( std::string command, std::string outputfile )
 {
 	system ( ( command + outputfile ).c_str() );
+
+	Log::WriteFileToLog ( outputfile, command );
 }
 
 void Diag::QueryWMIC ( std::string arg1, std::string arg2 )
@@ -318,7 +370,7 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2 )
 	std::string WMIC;
 	std::stringstream ss; // create a stringstream
 
-	ss << "wmic Path " << arg1.c_str() << " Get " << arg2 << " >" << files[10].c_str();
+	ss << "wmic Path " << arg1.c_str() << " Get " << arg2 << " >" << files[8].c_str();
 	WMIC = ss.str ();
 
 	// clear the stringstream
@@ -327,9 +379,28 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2 )
 
 	system ( WMIC.c_str() );
 
-	ConvertUnicodeToASCII ( files[10], files[3] );
+	ConvertUnicodeToASCII ( files[8], files[3] );
 
-	remove ( files[10].c_str() );
+	remove ( files[8].c_str() );
+
+	Log::WriteFileToLog ( files[3], "WMIC Path Win32_VideoController Get" );
+}
+
+void Diag::GetDir ( std::string directory )
+{
+	std::string dirPath;
+	std::stringstream ss; // create a stringstream
+
+	ss << "dir \"" << directory << "\" >\"" << files[4].c_str() << "\"";
+	dirPath = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	system ( dirPath.c_str() );
+
+	Log::WriteFileToLog ( files[4].c_str(), ( directory + " directory listing" ) );
 }
 
 void Diag::ExportRegKey ( std::string subkey )
@@ -337,7 +408,7 @@ void Diag::ExportRegKey ( std::string subkey )
 	std::string ExportReg;
 	std::stringstream ss; // create a stringstream
 
-	ss << "regedit /e /a " << files[7] << " \"" << subkey << "\"";
+	ss << "regedit /e /a " << files[5] << " \"" << subkey << "\"";
 	ExportReg = ss.str();
 
 	// clear the stringstream
@@ -345,222 +416,26 @@ void Diag::ExportRegKey ( std::string subkey )
 	ss.clear();
 
 	system ( ExportReg.c_str() );
-}
 
-void Diag::GetDirs ( void )
-{
-	std::string dirPath1;
-	std::string dirPath2;
-	std::string dirPath3;
-	std::string GTAModelsPath = ( GTAPath + "\\models" );
-	std::string MTAInnerPath = ( MTAPath + "\\MTA" );
-	std::stringstream ss; // create a stringstream
+	std::ifstream file;
+	std::string line;
 
-	ss << "dir \"" << MTAInnerPath << "\" >\"" << files[4].c_str() << "\"";
-	dirPath1 = ss.str();
+	file.open ( files[5].c_str(), std::ios::in );
 
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	ss << "dir \"" << GTAPath << "\" >\"" << files[5].c_str() << "\"";
-	dirPath2 = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	ss << "dir \"" << GTAModelsPath << "\" >\"" << files[6].c_str() << "\"";
-	dirPath3 = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	system ( dirPath1.c_str() );
-	system ( dirPath2.c_str() );
-	system ( dirPath3.c_str() );
-}
-
-bool Diag::ConcatenateLogs ( void )
-{
-	SetCurrentDirectory ( MTAPath.c_str() );
-
-	std::ifstream dxdiag ( files[1].c_str(), std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !dxdiag )
-		std::cout << "Can't open dxdiag.log." << std::endl;
-	#endif
-
-	std::ifstream tasklist ( files[2].c_str(), std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !tasklist )
-		std::cout << "Can't open tasklist.txt." << std::endl;
-	#endif
-
-	std::ifstream cegui ( "MTA\\cegui.log", std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !cegui )
-		std::cout << "No CEGUI.log present. Have you tried launching MTA:SA at least once?" << std::endl;
-	#endif
-
-	std::ifstream core ( "MTA\\core.log", std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !core )
-		std::cout << "No core.log present." << std::endl;
-	#endif
-
-	std::ifstream logfile ( "MTA\\logfile.txt", std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !logfile )
-		std::cout << "No logfile.txt present. Have you tried launching MTA:SA at least once?" << std::endl;
-	#endif
-
-	std::ifstream wmic ( files[3].c_str(), std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !wmic )
-		std::cout << "Can't open WMIC.txt." << std::endl;
-	#endif
-
-	std::ifstream mtadir ( files[4].c_str(), std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !mtadir )
-		std::cout << "Can't open mtadir.txt." << std::endl;
-	#endif
-
-	std::ifstream gtadir ( files[5].c_str(), std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !gtadir )
-		std::cout << "Can't open gtadir.txt." << std::endl;
-	#endif
-
-	std::ifstream gtamodelsdir ( files[6].c_str(), std::ios::in | std::ios::binary );
-	#ifdef VERBOSE
-	if ( !gtamodelsdir )
-		std::cout << "Can't open gtamodelsdir.txt." << std::endl;
-	#endif
-
-	std::ofstream out ( files[0].c_str(), std::ios::out | std::ios::binary );
-
-	if ( !out )
+	if ( file )
 	{
-		std::cout << "Can't open output file." << std::endl << std::endl;
-		return false;
-	}
+		while ( !file.eof() )
+		{
+			getline ( file, line );
 
-	// make a soup of logs
-	out << "MTADiag v" << VERSION << " by Towncivilian" << std::endl;
-	out << "Log generated on    " << sysTime.wYear << "-" << sysTime.wMonth << "-" << sysTime.wDay << " " << sysTime.wHour << ":" << sysTime.wMinute << ":" << sysTime.wSecond << std::endl;
-	out << "MTA path:           " << MTAPath << std::endl;
-	out << "Old MTA version:    " << OriginalMTAVersion << std::endl;
-	out << "MTA version:        " << MTAVersion << std::endl;
-	out << "GTA path:           " << GTAPath << std::endl;
-	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
-	out << "D3D9.dll present:   " << D3D9Present << std::endl;        // check if user has a D3D9.dll that he didn't delete per MTA's recommendation
-	std::string DirectXState = ( CheckForFile ( files[8] ) ) ? "Yes" : "No";
-	out << "DirectX up-to-date: " << DirectXState << std::endl;     // ensure DirectX is up-to-date
-	if ( DXUpdated == 1 )                                           // if DirectX was up-to-date already, no need to print this
-		out << "DirectX was updated: Yes" << std::endl;
-	out << std::endl;
+			if ( strstr ( line.c_str(), "gta_sa.exe" ) || strstr ( line.c_str(), "Multi Theft Auto.exe" ) )
+			{
+				Log::WriteStringToLog ( "Compatibility registry entry match:", line );
+				Log::WriteStringToLog ( "" );
+			}
+		}
+	}
+	Log::WriteStringToLog ( "" );
 
-	if ( dxdiag )
-	{
-	out << "dxdiag.log:" << std::endl << std::endl;
-	out << dxdiag.rdbuf() << std::flush;
-	out << std::endl << std::endl;
-	dxdiag.close();
-	}
-	if ( tasklist )
-	{
-	out << "Running processes:" << std::endl << std::endl;
-	out << tasklist.rdbuf() << std::flush;
-	out << std::endl << std::endl;
-	tasklist.close();
-	}
-	if ( cegui )
-	{
-	out << "CEGUI.log:" << std::endl << std::endl;
-	out << cegui.rdbuf() << std::flush;
-	out << std::endl << std::endl;
-	cegui.close();
-	}
-	if ( core )
-	{
-	out << "core.log:" << std::endl << std::endl;
-	out << core.rdbuf() << std::flush;
-	core.close();
-	}
-	if ( logfile )
-	{
-	out << "logfile.txt:" << std::endl << std::endl;
-	out << logfile.rdbuf() << std::flush;
-	out << std::endl << std::endl;
-	logfile.close();
-	}
-
-	// not the greatest time to do these, but meh
-	
-	ExportRegKey ( CompatModeRegKey1 );
-
-	std::ifstream reg1 ( files[7].c_str(), std::ios::in | std::ios::binary );
-	if ( !reg1 )
-		std::cout << "Can't open registryexport.txt." << std::endl;
-	else
-	{
-		out << "Compatibility registry entries 1:" << std::endl << std::endl;
-		out << reg1.rdbuf() << std::flush;
-		reg1.close();
-		out << std::endl;
-	}
-
-	ExportRegKey ( CompatModeRegKey2 );
-
-	std::ifstream reg2 ( files[7].c_str(), std::ios::in | std::ios::binary );
-	if ( !reg2 )
-		std::cout << "Can't open registryexport.txt." << std::endl;
-	else
-	{
-		out << "Compatibility registry entries 2:" << std::endl << std::endl;
-		out << reg2.rdbuf() << std::flush;
-		reg2.close();
-		out << std::endl;
-	}
-
-	if ( wmic )
-	{
-	out << "WMIC Path Win32_VideoController Get:" << std::endl << std::endl;
-	out << wmic.rdbuf() << std::flush;
-	wmic.close();
-	out << std::endl << std::endl;
-	}
-
-	if ( mtadir )
-	{
-	out << "MTA directory listing:" << std::endl << std::endl;
-	out << mtadir.rdbuf() << std::flush;
-	mtadir.close();
-	out << std::endl << std::endl;
-	}
-	if ( gtadir )
-	{
-	out << "GTA directory listing:" << std::endl << std::endl;
-	out << gtadir.rdbuf() << std::flush;
-	gtadir.close();
-	out << std::endl<< std::endl;
-	}
-	if ( gtamodelsdir )
-	{
-	out << "GTA\\models directory listing:" << std::endl << std::endl;
-	out << gtamodelsdir.rdbuf() << std::flush;
-	gtamodelsdir.close();
-	}
-
-	out.close();
-
-	std::cout << "Log file generated." << std::endl << std::endl;
-	std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
-	std::cout << "Include the Pastebin link in your forum post." << std::endl;
-	ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
-
-	return true;
+	file.close();
 }

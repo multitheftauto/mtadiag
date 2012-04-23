@@ -3,7 +3,7 @@
 * PROJECT: MTADiag
 * LICENSE: GNU GPL v3
 * FILE: Diag.h
-* PURPOSE: Header for static diagnostic class
+* PURPOSE: Header for Diag namespace
 * DEVELOPERS: Matthew "Towncivilian" Wolfe <ligushka@gmail.com>
 * 
 * 
@@ -17,13 +17,14 @@
 
 #include "Common.h"
 
-#define CUR_MTA_VERSIONS 5 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4
+#define CUR_MTA_VERSIONS 6 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4, 1.5
 
 #define MTAPathValue	"Last Install Location"
 #define MTA11PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1"
 #define MTA12PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2"
 #define MTA13PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3"
 #define MTA14PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4"
+#define MTA15PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5"
 
 #define MTAGTAPathValue  "GTA:SA Path"
 #define MTAGTAPathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\Common"
@@ -33,11 +34,13 @@
 #define MTA12VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2\\Settings\\general"
 #define MTA13VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3\\Settings\\general"
 #define MTA14VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4\\Settings\\general"
+#define MTA15VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5\\Settings\\general"
 
 #define MTA11NightlyURL "http://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "http://nightly.mtasa.com/?mtasa-1.2-rc-latest"
 #define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3-rc-latest"
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
+#define MTA15NightlyURL "http://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
 
 #define CompatModeRegKey1 "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 #define CompatModeRegKey2 "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
@@ -65,10 +68,9 @@ namespace Diag {
 	// generate a DXDiag log, a list of currently running processes
 	// then concatenate those logs, MTA's logs, and some other miscellaneous info
 	void                    DoSystemCommandWithOutput   ( std::string command, std::string outputfile );
-	void                    GetDirs                     ( void );
+	void                    GetDir                      ( std::string directory );
 	void                    ExportRegKey                ( std::string );
-	void                    QueryWMIC                 ( std::string, std::string = "" );
-	bool                    ConcatenateLogs             ( void );
+	void                    QueryWMIC                   ( std::string, std::string = "" );
 
 	// used for storing environment variables & current system time
 	static std::string      tempDir;
