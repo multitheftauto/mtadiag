@@ -33,7 +33,7 @@ void Diag::Init ( void )
 	Log::WriteStringToLog ( " by Towncivilian" );
 
 	// poll all currently installed MTA versions; if there is more than one installed, ask the user to pick one
-	if ( !PollMTAVersions() )
+	if ( !PollMTAVersions() ) // PollMTAVersions will return true if there is only one version of MTA installed
 		UserPickVersion();
 
 	// obtain GTA:SA's path and MTA's version
@@ -41,7 +41,11 @@ void Diag::Init ( void )
 	GetMTAVersion();
 	OriginalMTAVersion = GetMTAVersion(); // store the original version to dump in the log file later on
 
-	// update MTA to latest nightly/unstable build
+	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
+	if ( CheckForFile( files[6].c_str() ) ) { std::cout << std::endl << "DirectX is up-to-date." << std::endl << std::endl; }
+	else { UpdateDirectX(); DXUpdated = 1; }
+
+	// update MTA to latest nightly/unstable build, depending on the version
 	UpdateMTA();
 
 	// write a bunch of information to the log file since we just collected it
@@ -52,18 +56,13 @@ void Diag::Init ( void )
 	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "D3D9.dll present:    ", D3D9Present );
 
-	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
-	if ( CheckForFile( files[6].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
-	else { UpdateDirectX(); DXUpdated = 1; }
-
-	// more DirectX stuff
 	std::string DirectXState = ( CheckForFile ( files[6] ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "DirectX up-to-date:  ", DirectXState );
-	if ( DXUpdated == 1)
-		Log::WriteStringToLog ( "DirectX was updated: Yes");
+	if ( DXUpdated == 1 )
+		Log::WriteStringToLog ( "DirectX was updated:  Yes");
 	Log::WriteStringToLog ( "" );
 
-	// collect a bunch of information and output to log file
+	// collect more information and output to log file
 	std::cout << "Gathering information. Please wait..." << std::endl << std::endl;
 
 #ifndef SKIPDXDIAG
@@ -72,11 +71,9 @@ void Diag::Init ( void )
 	DoSystemCommandWithOutput ( "tasklist >", files[2] );
 	DoSystemCommandWithOutput ( "ipconfig /all >", files[9] );
 
-	SetCurrentDirectory ( MTAPath.c_str() );
-
-	Log::WriteFileToLog ( "MTA\\core.log", "core.log" );
-	Log::WriteFileToLog ( "MTA\\logfile.txt", "logfile.txt" );
-	Log::WriteFileToLog ( "MTA\\CEGUI.log", "CEGUI.log" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 
 	QueryWMIC ( "Win32_VideoController" );
 	ExportRegKey ( CompatModeRegKey1 );
@@ -143,7 +140,7 @@ bool Diag::PollMTAVersions ( void )
 	MTAVersionsInstalled[2] = readRegKey ( MTAPathValue, MTA12PathSubKey ); // store MTA 1.2 path, if present
 	MTAVersionsInstalled[3] = readRegKey ( MTAPathValue, MTA13PathSubKey ); // store MTA 1.3 path, if present
 	MTAVersionsInstalled[4] = readRegKey ( MTAPathValue, MTA14PathSubKey ); // store MTA 1.4 path, if present
-	MTAVersionsInstalled[5] = readRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.4 path, if present
+	MTAVersionsInstalled[5] = readRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.5 path, if present
 
 	// if a version isn't installed, "Failed to get key." is returned by readRegKey; clear that array element
 	for ( int i = 1; i < CUR_MTA_VERSIONS; i++ )

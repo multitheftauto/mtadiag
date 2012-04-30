@@ -62,17 +62,15 @@ namespace Diag {
 
 	// update MTA:SA to the latest nightly/unstable build
 	// and update DirectX if necessary
-	void                    UpdateMTA                   ( void );
 	void                    UpdateDirectX               ( void );
+	void                    UpdateMTA                   ( void );
 
-	// generate a DXDiag log, a list of currently running processes
-	// then concatenate those logs, MTA's logs, and some other miscellaneous info
 	void                    DoSystemCommandWithOutput   ( std::string command, std::string outputfile );
 	void                    GetDir                      ( std::string directory );
 	void                    ExportRegKey                ( std::string );
 	void                    QueryWMIC                   ( std::string, std::string = "" );
 
-	// used for storing environment variables & current system time
+	// used for storing environment variables, current system time, files, and some paths
 	static std::string      tempDir;
 	static std::string      systemRoot;
 	static SYSTEMTIME       sysTime;
