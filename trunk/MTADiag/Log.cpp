@@ -51,8 +51,8 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 void Log::WriteStringToLog ( std::string string, std::string string2, bool endline )
 {
 	logfile            << string  
-		               << " "
-					   << string2;
+                       << " "
+                       << string2;
 
 	if ( endline )
 		logfile << std::endl;

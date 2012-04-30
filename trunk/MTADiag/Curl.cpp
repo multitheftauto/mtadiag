@@ -26,7 +26,7 @@ bool downloadFile ( std::string fileURL, std::string filePath )
 	if ( curl )
 	{
 		FILE *fp;
-		fp = fopen ( filePath.c_str(),"wb" );
+		fopen_s ( &fp, filePath.c_str(), "wb" );
 		curl_easy_setopt ( curl, CURLOPT_URL, fileURL.c_str() );
 		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, fwrite );
 		curl_easy_setopt ( curl, CURLOPT_WRITEDATA, fp );
