@@ -47,8 +47,8 @@
 
 namespace Diag {
 
-	void                    Init                        ( void );
-	void                    Destroy                     ( void );
+	void                    Begin                       ( void );
+	void                    Cleanup                     ( void );
 
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
 	void                    GeneratePaths               ( void );
@@ -67,10 +67,12 @@ namespace Diag {
 
 	void                    DoSystemCommandWithOutput   ( std::string command, std::string outputfile );
 	void                    GetDir                      ( std::string directory );
-	void                    ExportRegKey                ( std::string );
-	void                    QueryWMIC                   ( std::string, std::string = "" );
+	void                    ExportRegKeyToFile          ( std::string subkey, std::string filePath );
+	void                    TrimCompatabilityExport     ( std::string filePath );
+	void                    QueryWMIC                   ( std::string, std::string = "", std::string = "", std::string = "" );
 
 	// used for storing environment variables, current system time, files, and some paths
+	static std::string      logFileName;
 	static std::string      tempDir;
 	static std::string      systemRoot;
 	static SYSTEMTIME       sysTime;
@@ -86,6 +88,8 @@ namespace Diag {
 
 	static std::string      MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed
 	static int              MTAVerChoice;                           // stores user's choice of which MTA version to diagnose
+
+	static std::string      PasteBinResult;
 
 	static bool             DXUpdated;                              // was DirectX updated by MTADiag?
 }

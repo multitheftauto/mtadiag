@@ -22,8 +22,6 @@
 #include <vector>
 #include "Log.h"
 
-#define VERSION "2.2.1"
-
-//#pragma warning ( disable : 4996) // disable unsafe function use warning
+#define VERSION "2.3"
 
 #endif
