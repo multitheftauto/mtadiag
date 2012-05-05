@@ -16,7 +16,7 @@
 #define UTIL_H
 #include "Common.h"
 
-std::string         readRegKey			  ( std::string value, std::string subkey );
+std::string         ReadRegKey			  ( std::string value, std::string subkey );
 bool                CheckForFile          ( std::string FilePath );
 void                ConvertUnicodeToASCII ( std::string file1, std::string file2 );
 

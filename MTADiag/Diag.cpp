@@ -22,27 +22,29 @@
 
 std::vector<std::string>      Diag::files;
 
-void Diag::Init ( void )
+void Diag::Begin ( void )
 {
 	// obtain necessary environment variables and generate filepaths used for temporary files
 	GeneratePaths();
 
 	Log::Open ( files[0] ); // create the log file and open it
 
-	Log::WriteStringToLog ( "MTADiag v", VERSION, false );
+	Log::WriteStringToLog ( "MTADiag version", VERSION, false );
 	Log::WriteStringToLog ( " by Towncivilian" );
 
 	// poll all currently installed MTA versions; if there is more than one installed, ask the user to pick one
 	if ( !PollMTAVersions() ) // PollMTAVersions will return true if there is only one version of MTA installed
 		UserPickVersion();
 
-	// obtain GTA:SA's path and MTA's version
-	GetGamePath();
-	GetMTAVersion();
+	std::cout << "MTA install path: " << GetMTAPath() << std::endl;
+	std::cout << "MTA version:      " << GetMTAVersion() << std::endl;
+	std::cout << "GTA install path: " << GetGamePath() << std::endl;
+	std::cout << std::endl;
+
 	OriginalMTAVersion = GetMTAVersion(); // store the original version to dump in the log file later on
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
-	if ( CheckForFile( files[6].c_str() ) ) { std::cout << std::endl << "DirectX is up-to-date." << std::endl << std::endl; }
+	if ( CheckForFile( files[6].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
 
 	// update MTA to latest nightly/unstable build, depending on the version
@@ -75,9 +77,12 @@ void Diag::Init ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 
-	QueryWMIC ( "Win32_VideoController" );
-	ExportRegKey ( CompatModeRegKey1 );
-	ExportRegKey ( CompatModeRegKey2 );
+	QueryWMIC ( "Path", "Win32_VideoController", "Get" );
+
+	ExportRegKeyToFile ( CompatModeRegKey1, files[5] );
+	TrimCompatabilityExport ( files[5] );
+	ExportRegKeyToFile ( CompatModeRegKey2, files[5] );
+	TrimCompatabilityExport ( files[5] );
 
 	GetDir ( ( MTAPath + "\\MTA" ) );
 	GetDir ( GTAPath );
@@ -86,13 +91,26 @@ void Diag::Init ( void )
 	// close the log file for writing
 	Log::Close();
 
-	std::cout << "Log file generated." << std::endl << std::endl;
-	std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
-	std::cout << "Include the Pastebin link in your forum post." << std::endl;
-	ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
+	std::cout << "Log file generated. Uploading to Pastebin..." << std::endl;
+
+	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // upload to Pastebin
+
+	if ( strstr ( PasteBinResult.c_str(), "Bad API request" ) || strstr ( PasteBinResult.c_str(), "Post limit" ) )
+	{
+		std::cout << std::endl << std::endl << "Failed to upload log file to Pastebin." << std::endl;
+		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
+		std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
+		std::cout << "Include the Pastebin link in your forum post." << std::endl << std::endl;
+		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
+	}
+	else
+	{
+		std::cout << "Log file uploaded to Pastebin. Please include the Pastebin link in your forum post." << std::endl;
+		ShellExecute ( NULL, "open", PasteBinResult.c_str(), NULL, NULL, SW_SHOW );
+	}
 }
 
-void Diag::Destroy ( void )
+void Diag::Cleanup ( void )
 {
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
@@ -110,15 +128,15 @@ void Diag::GeneratePaths ( void )
 	// generate necessary file paths
 	std::stringstream ss;
 
-	// append system time to MTADiag-Log filename
-	ss << tempDir << "\\MTADiag-Log-" << sysTime.wYear << "-" << sysTime.wMonth << "-" << sysTime.wDay << "_" << sysTime.wHour << "-" << sysTime.wMinute << "-" << sysTime.wSecond << ".txt";
-	files.push_back ( ss.str() ); // files[0]
+	ss << "MTADiag-Log-" << sysTime.wYear << "-" << sysTime.wMonth << "-" << sysTime.wDay << "_" << sysTime.wHour << "-" << sysTime.wMinute << "-" << sysTime.wSecond;
+	logFileName = ss.str();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
-	files.push_back ( tempDir + "\\dxdiag.log" ); // files[1] ...
+	files.push_back ( tempDir + "\\" + logFileName + ".txt" ); // files [0] ...
+	files.push_back ( tempDir + "\\dxdiag.log" );
 	files.push_back ( tempDir + "\\tasklist.txt" );
 	files.push_back ( tempDir + "\\WMIC.txt" );
 	files.push_back ( tempDir + "\\directory.txt" );
@@ -136,11 +154,11 @@ void Diag::GeneratePaths ( void )
 
 bool Diag::PollMTAVersions ( void )
 {
-	MTAVersionsInstalled[1] = readRegKey ( MTAPathValue, MTA11PathSubKey ); // store MTA 1.1 path, if present
-	MTAVersionsInstalled[2] = readRegKey ( MTAPathValue, MTA12PathSubKey ); // store MTA 1.2 path, if present
-	MTAVersionsInstalled[3] = readRegKey ( MTAPathValue, MTA13PathSubKey ); // store MTA 1.3 path, if present
-	MTAVersionsInstalled[4] = readRegKey ( MTAPathValue, MTA14PathSubKey ); // store MTA 1.4 path, if present
-	MTAVersionsInstalled[5] = readRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.5 path, if present
+	MTAVersionsInstalled[1] = ReadRegKey ( MTAPathValue, MTA11PathSubKey ); // store MTA 1.1 path, if present
+	MTAVersionsInstalled[2] = ReadRegKey ( MTAPathValue, MTA12PathSubKey ); // store MTA 1.2 path, if present
+	MTAVersionsInstalled[3] = ReadRegKey ( MTAPathValue, MTA13PathSubKey ); // store MTA 1.3 path, if present
+	MTAVersionsInstalled[4] = ReadRegKey ( MTAPathValue, MTA14PathSubKey ); // store MTA 1.4 path, if present
+	MTAVersionsInstalled[5] = ReadRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.5 path, if present
 
 	// if a version isn't installed, "Failed to get key." is returned by readRegKey; clear that array element
 	for ( int i = 1; i < CUR_MTA_VERSIONS; i++ )
@@ -171,7 +189,7 @@ bool Diag::PollMTAVersions ( void )
 		std::cout << "Can't read MTA path." << std::endl << "You are either not running this program as an Administrator," << std::endl;
 		std::cout << "or you may be running a version of MTA older than 1.1." << std::endl;
 		std::cout << "Update at www.mtasa.com, then run MTADiag again if necessary." << std::endl;
-		system( "pause" );
+		system ( "pause" );
 		exit ( EXIT_FAILURE );
 	}
 	else
@@ -205,23 +223,23 @@ std::string Diag::GetMTAPath ( void )
 	switch ( MTAVerChoice )
 	{
 	case 1:
-		MTAPath = readRegKey ( MTAPathValue, MTA11PathSubKey );
+		MTAPath = ReadRegKey ( MTAPathValue, MTA11PathSubKey );
 		return MTAPath;
 		break;
 	case 2:
-		MTAPath = readRegKey ( MTAPathValue, MTA12PathSubKey );
+		MTAPath = ReadRegKey ( MTAPathValue, MTA12PathSubKey );
 		return MTAPath;
 		break;
 	case 3:
-		MTAPath = readRegKey ( MTAPathValue, MTA13PathSubKey );
+		MTAPath = ReadRegKey ( MTAPathValue, MTA13PathSubKey );
 		return MTAPath;
 		break;
 	case 4:
-		MTAPath = readRegKey ( MTAPathValue, MTA14PathSubKey );
+		MTAPath = ReadRegKey ( MTAPathValue, MTA14PathSubKey );
 		return MTAPath;
 		break;
 	case 5:
-		MTAPath = readRegKey ( MTAPathValue, MTA15PathSubKey );
+		MTAPath = ReadRegKey ( MTAPathValue, MTA15PathSubKey );
 		return MTAPath;
 		break;
 	}
@@ -233,23 +251,23 @@ std::string Diag::GetMTAVersion ( void )
 	switch ( MTAVerChoice )
 	{
 	case 1:
-		MTAVersion = readRegKey ( MTAVerValue, MTA11VerSubKey );
+		MTAVersion = ReadRegKey ( MTAVerValue, MTA11VerSubKey );
 		return MTAVersion;
 		break;
 	case 2:
-		MTAVersion = readRegKey ( MTAVerValue, MTA12VerSubKey );
+		MTAVersion = ReadRegKey ( MTAVerValue, MTA12VerSubKey );
 		return MTAVersion;
 		break;
 	case 3:
-		MTAVersion = readRegKey ( MTAVerValue, MTA13VerSubKey );
+		MTAVersion = ReadRegKey ( MTAVerValue, MTA13VerSubKey );
 		return MTAVersion;
 		break;
 	case 4:
-		MTAVersion = readRegKey ( MTAVerValue, MTA14VerSubKey );
+		MTAVersion = ReadRegKey ( MTAVerValue, MTA14VerSubKey );
 		return MTAVersion;
 		break;
 	case 5:
-		MTAVersion = readRegKey ( MTAVerValue, MTA15VerSubKey );
+		MTAVersion = ReadRegKey ( MTAVerValue, MTA15VerSubKey );
 		return MTAVersion;
 		break;
 	}
@@ -258,17 +276,12 @@ std::string Diag::GetMTAVersion ( void )
 
 std::string Diag::GetGamePath( void )
 {
-	GTAPath = readRegKey ( MTAGTAPathValue, MTAGTAPathSubKey );
+	GTAPath = ReadRegKey ( MTAGTAPathValue, MTAGTAPathSubKey );
 	return GTAPath;
 }
 
 void Diag::UpdateMTA ( void )
 {
-	std::cout << "MTA install path: " << GetMTAPath() << std::endl;
-	std::cout << "MTA version:      " << GetMTAVersion() << std::endl;
-	std::cout << "GTA install path: " << GTAPath << std::endl;
-	std::cout << std::endl;
-
 	std::string url;
 	char works;
 
@@ -294,7 +307,7 @@ void Diag::UpdateMTA ( void )
 	}
 
 #ifndef SKIPUPDATE
-	if ( downloadFile (url, files[7].c_str() ) )
+	if ( Curl::DownloadFile (url, files[7].c_str() ) )
 	{
 		std::ifstream ifile ( files[7].c_str()  );
 		if ( ifile )
@@ -319,9 +332,9 @@ void Diag::UpdateMTA ( void )
 	if ( works == 'y' )
 	{
 		std::cout << "Enjoy playing MTA!" << std::endl;
-		Destroy();
-		system ("pause");
-		exit (EXIT_SUCCESS);
+		Cleanup();
+		system ( "pause" );
+		exit ( EXIT_SUCCESS );
 	}
 	else
 		std::cout << "MTA version is now: " << GetMTAVersion() << std::endl << std::endl;
@@ -339,7 +352,7 @@ void Diag::UpdateDirectX ( void )
 	std::cout << "DirectX is not up-to-date." << std::endl;
 	std::cout << "Downloading web updater..." << std::endl;
 
-	if ( downloadFile( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) )
+	if ( Curl::DownloadFile( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) )
 	{
 		std::cout << std::endl << "Follow the instructions to update DirectX." << std::endl << std::endl;
 		system( DXWebSetupPath.c_str() );
@@ -362,12 +375,12 @@ void Diag::DoSystemCommandWithOutput ( std::string command, std::string outputfi
 	Log::WriteFileToLog ( outputfile, command );
 }
 
-void Diag::QueryWMIC ( std::string arg1, std::string arg2 )
+void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )
 {
 	std::string WMIC;
 	std::stringstream ss; // create a stringstream
 
-	ss << "wmic Path " << arg1.c_str() << " Get " << arg2 << " >" << files[8].c_str();
+	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[8].c_str();
 	WMIC = ss.str ();
 
 	// clear the stringstream
@@ -380,7 +393,7 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2 )
 
 	remove ( files[8].c_str() );
 
-	Log::WriteFileToLog ( files[3], "WMIC Path Win32_VideoController Get" );
+	Log::WriteFileToLog ( files[3], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) );
 }
 
 void Diag::GetDir ( std::string directory )
@@ -400,12 +413,12 @@ void Diag::GetDir ( std::string directory )
 	Log::WriteFileToLog ( files[4].c_str(), ( directory + " directory listing" ) );
 }
 
-void Diag::ExportRegKey ( std::string subkey )
+void Diag::ExportRegKeyToFile ( std::string subkey, std::string filePath )
 {
 	std::string ExportReg;
 	std::stringstream ss; // create a stringstream
 
-	ss << "regedit /e /a " << files[5] << " \"" << subkey << "\"";
+	ss << "regedit /e /a " << filePath << " \"" << subkey << "\"";
 	ExportReg = ss.str();
 
 	// clear the stringstream
@@ -413,11 +426,14 @@ void Diag::ExportRegKey ( std::string subkey )
 	ss.clear();
 
 	system ( ExportReg.c_str() );
+}
 
+void Diag::TrimCompatabilityExport ( std::string filePath )
+{
 	std::ifstream file;
 	std::string line;
 
-	file.open ( files[5].c_str(), std::ios::in );
+	file.open ( filePath.c_str(), std::ios::in );
 
 	if ( file )
 	{

@@ -16,6 +16,12 @@
 #define CCURL_H
 #include "Common.h"
 
-bool            downloadFile            ( std::string fileURL, std::string filePath );
+namespace Curl {
+
+	bool                  DownloadFile            ( std::string fileURL, std::string filePath );
+	std::string           CreatePasteBin          ( std::string filePath, std::string pasteName );
+
+	static std::string    response;
+}
 
 #endif

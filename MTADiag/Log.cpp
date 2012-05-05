@@ -36,6 +36,13 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 		return false;
 	}
 
+	// trim any trailing spaces or ">" from system command piping from the item name
+	std::string garbage ( " >" );
+	size_t found;
+
+	found = itemName.find_last_not_of ( garbage );
+	if ( found != std::string::npos ) { itemName.erase ( found + 1 ); }
+
 	logfile << itemName
 			<< ":"
 			<< std::endl << std::endl
@@ -50,9 +57,9 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 
 void Log::WriteStringToLog ( std::string string, std::string string2, bool endline )
 {
-	logfile            << string  
-                       << " "
-                       << string2;
+	logfile << string  
+            << " "
+            << string2;
 
 	if ( endline )
 		logfile << std::endl;

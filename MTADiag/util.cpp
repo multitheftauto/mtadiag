@@ -14,16 +14,16 @@
 
 #include "util.h"
 
-std::string readRegKey ( std::string value, std::string subkey )
+std::string ReadRegKey ( std::string value, std::string subkey )
 {
 	HKEY hKey = 0;
 	char buf[255] = {0};
 	DWORD dwType = 1;
 	DWORD dwBufSize = sizeof ( buf );
 
-	if ( RegOpenKey ( HKEY_LOCAL_MACHINE, subkey.c_str(), &hKey) == ERROR_SUCCESS )
+	if ( RegOpenKey ( HKEY_LOCAL_MACHINE, subkey.c_str(), &hKey ) == ERROR_SUCCESS )
 	{
-		if ( RegQueryValueEx ( hKey, value.c_str(), NULL, &dwType, (BYTE*)buf, &dwBufSize) == ERROR_SUCCESS )
+		if ( RegQueryValueEx ( hKey, value.c_str(), NULL, &dwType, ( BYTE* ) buf, &dwBufSize ) == ERROR_SUCCESS )
 		{
 			std::string path ( buf );
 			RegCloseKey ( hKey );

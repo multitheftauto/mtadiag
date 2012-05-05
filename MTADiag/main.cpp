@@ -21,9 +21,9 @@ int main()
 	SetConsoleTitle ( "MTADiag v" VERSION );
 	std::cout << "MTADiag v" << VERSION << " by Towncivilian" << std::endl << std::endl;
 
-	Diag::Init(); // begin diagnostics
+	Diag::Begin(); // begin diagnostics
 
-	Diag::Destroy(); // remove temporary files
+	Diag::Cleanup(); // remove temporary files
 
 	system ( "pause" ); // wait for user exit
 
