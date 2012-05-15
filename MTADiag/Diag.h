@@ -65,7 +65,7 @@ namespace Diag {
 	void                    UpdateDirectX               ( void );
 	void                    UpdateMTA                   ( void );
 
-	void                    DoSystemCommandWithOutput   ( std::string command, std::string outputfile );
+	void                    DoSystemCommandWithOutput   ( std::string command );
 	void                    GetDir                      ( std::string directory );
 	void                    ExportRegKeyToFile          ( std::string subkey, std::string filePath );
 	void                    TrimCompatabilityExport     ( std::string filePath );
