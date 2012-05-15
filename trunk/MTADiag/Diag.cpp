@@ -44,7 +44,7 @@ void Diag::Begin ( void )
 	OriginalMTAVersion = GetMTAVersion(); // store the original version to dump in the log file later on
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
-	if ( CheckForFile( files[6].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
+	if ( CheckForFile( files[5].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
 
 	// update MTA to latest nightly/unstable build, depending on the version
@@ -58,7 +58,7 @@ void Diag::Begin ( void )
 	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "D3D9.dll present:    ", D3D9Present );
 
-	std::string DirectXState = ( CheckForFile ( files[6] ) ) ? "Yes" : "No";
+	std::string DirectXState = ( CheckForFile ( files[5] ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "DirectX up-to-date:  ", DirectXState );
 	if ( DXUpdated == 1 )
 		Log::WriteStringToLog ( "DirectX was updated:  Yes");
@@ -68,21 +68,22 @@ void Diag::Begin ( void )
 	std::cout << "Gathering information. Please wait..." << std::endl << std::endl;
 
 #ifndef SKIPDXDIAG
-	DoSystemCommandWithOutput ( "dxdiag /t ", files[1] );
+	DoSystemCommandWithOutput ( "dxdiag /t " );
 #endif
-	DoSystemCommandWithOutput ( "tasklist >", files[2] );
-	DoSystemCommandWithOutput ( "ipconfig /all >", files[9] );
+	DoSystemCommandWithOutput ( "tasklist >" );
+	DoSystemCommandWithOutput ( "ipconfig /all >" );
 
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
 
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" );
 
-	ExportRegKeyToFile ( CompatModeRegKey1, files[5] );
-	TrimCompatabilityExport ( files[5] );
-	ExportRegKeyToFile ( CompatModeRegKey2, files[5] );
-	TrimCompatabilityExport ( files[5] );
+	ExportRegKeyToFile ( CompatModeRegKey1, files[4] );
+	TrimCompatabilityExport ( files[4] );
+	ExportRegKeyToFile ( CompatModeRegKey2, files[4] );
+	TrimCompatabilityExport ( files[4] );
 
 	GetDir ( ( MTAPath + "\\MTA" ) );
 	GetDir ( GTAPath );
@@ -136,15 +137,13 @@ void Diag::GeneratePaths ( void )
 	ss.clear();
 
 	files.push_back ( tempDir + "\\" + logFileName + ".txt" ); // files [0] ...
-	files.push_back ( tempDir + "\\dxdiag.log" );
-	files.push_back ( tempDir + "\\tasklist.txt" );
+	files.push_back ( tempDir + "\\tempoutput.txt" );
 	files.push_back ( tempDir + "\\WMIC.txt" );
 	files.push_back ( tempDir + "\\directory.txt" );
 	files.push_back ( tempDir + "\\regexport.txt" );
 	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" );
 	files.push_back ( tempDir + "\\MTANightly.exe" );
 	files.push_back ( tempDir + "\\WMICUni.txt" );
-	files.push_back ( tempDir + "\\ipconfig.txt" );
 
 #ifdef DEBUGOUTPUT
 	for ( int i = 0; i < ( signed ) files.size(); i++ )
@@ -307,14 +306,14 @@ void Diag::UpdateMTA ( void )
 	}
 
 #ifndef SKIPUPDATE
-	if ( Curl::DownloadFile (url, files[7].c_str() ) )
+	if ( Curl::DownloadFile (url, files[6].c_str() ) )
 	{
-		std::ifstream ifile ( files[7].c_str()  );
+		std::ifstream ifile ( files[6].c_str()  );
 		if ( ifile )
 		{
 			std::cout << std::endl << "Launching the installer..." << std::endl;
 			std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
-			system ( files[7].c_str()  );
+			system ( files[6].c_str()  );
 		}
 	}
 	else
@@ -368,11 +367,11 @@ void Diag::UpdateDirectX ( void )
 	remove( DXWebSetupPath.c_str() );
 }
 
-void Diag::DoSystemCommandWithOutput ( std::string command, std::string outputfile )
+void Diag::DoSystemCommandWithOutput ( std::string command )
 {
-	system ( ( command + outputfile ).c_str() );
+	system ( ( command + files[1] ).c_str() );
 
-	Log::WriteFileToLog ( outputfile, command );
+	Log::WriteFileToLog ( files[1], command );
 }
 
 void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )
@@ -380,7 +379,7 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std
 	std::string WMIC;
 	std::stringstream ss; // create a stringstream
 
-	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[8].c_str();
+	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[7].c_str();
 	WMIC = ss.str ();
 
 	// clear the stringstream
@@ -389,11 +388,11 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std
 
 	system ( WMIC.c_str() );
 
-	ConvertUnicodeToASCII ( files[8], files[3] );
+	ConvertUnicodeToASCII ( files[7], files[2] );
 
-	remove ( files[8].c_str() );
+	remove ( files[7].c_str() );
 
-	Log::WriteFileToLog ( files[3], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) );
+	Log::WriteFileToLog ( files[2], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) );
 }
 
 void Diag::GetDir ( std::string directory )
@@ -401,7 +400,7 @@ void Diag::GetDir ( std::string directory )
 	std::string dirPath;
 	std::stringstream ss; // create a stringstream
 
-	ss << "dir \"" << directory << "\" >\"" << files[4].c_str() << "\"";
+	ss << "dir \"" << directory << "\" >\"" << files[3].c_str() << "\"";
 	dirPath = ss.str();
 
 	// clear the stringstream
@@ -410,7 +409,7 @@ void Diag::GetDir ( std::string directory )
 
 	system ( dirPath.c_str() );
 
-	Log::WriteFileToLog ( files[4].c_str(), ( directory + " directory listing" ) );
+	Log::WriteFileToLog ( files[3].c_str(), ( directory + " directory listing" ) );
 }
 
 void Diag::ExportRegKeyToFile ( std::string subkey, std::string filePath )
