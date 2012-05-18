@@ -67,7 +67,7 @@ namespace Diag {
 
 	void                    DoSystemCommandWithOutput   ( std::string command );
 	void                    GetDir                      ( std::string directory );
-	void                    ExportRegKeyToFile          ( std::string subkey, std::string filePath );
+	void                    ExportRegKeyToFile          ( std::string subkey );
 	void                    TrimCompatabilityExport     ( std::string filePath );
 	void                    QueryWMIC                   ( std::string, std::string = "", std::string = "", std::string = "" );
 
