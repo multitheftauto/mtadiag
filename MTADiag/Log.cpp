@@ -36,6 +36,8 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 		return false;
 	}
 
+	if ( file.peek() == EOF ) { return false; }
+
 	// trim any trailing spaces or ">" from system command piping from the item name
 	std::string garbage ( " >" );
 	size_t found;

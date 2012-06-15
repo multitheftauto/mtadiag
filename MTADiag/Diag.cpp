@@ -72,6 +72,7 @@ void Diag::Begin ( void )
 #endif
 	DoSystemCommandWithOutput ( "tasklist >" );
 	DoSystemCommandWithOutput ( "ipconfig /all >" );
+	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" );
 
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
@@ -81,9 +82,9 @@ void Diag::Begin ( void )
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" );
 
 	ExportRegKeyToFile ( CompatModeRegKey1 );
-	TrimCompatabilityExport ( files[1] );
+	TrimCompatabilityExport();
 	ExportRegKeyToFile ( CompatModeRegKey2 );
-	TrimCompatabilityExport ( files[1] );
+	TrimCompatabilityExport();
 
 	GetDir ( ( MTAPath + "\\MTA" ) );
 	GetDir ( GTAPath );
@@ -115,7 +116,7 @@ void Diag::Cleanup ( void )
 {
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
-	for (int i = 1; i < ( signed ) files.size() - 1; i++)
+	for (int i = 1; i < ( signed ) files.size() - 1; i++) // don't delete D3DX9_43.dll
 		remove ( files[i].c_str() );
 }
 
@@ -329,6 +330,7 @@ void Diag::UpdateMTA ( void )
 	{
 		std::cout << "Enjoy playing MTA!" << std::endl;
 		Cleanup();
+		remove ( Diag::files[0].c_str() ); // remove the generated MTADiag log
 		system ( "pause" );
 		exit ( EXIT_SUCCESS );
 	}
@@ -346,10 +348,10 @@ void Diag::UpdateDirectX ( void )
 	std::cout << "DirectX is not up-to-date." << std::endl;
 	std::cout << "Downloading web updater..." << std::endl;
 
-	if ( Curl::DownloadFile( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) )
+	if ( Curl::DownloadFile ( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) )
 	{
 		std::cout << std::endl << "Follow the instructions to update DirectX." << std::endl << std::endl;
-		system( DXWebSetupPath.c_str() );
+		system ( DXWebSetupPath.c_str() );
 	}
 	else
 	{
@@ -422,12 +424,12 @@ void Diag::ExportRegKeyToFile ( std::string subkey )
 	system ( ExportReg.c_str() );
 }
 
-void Diag::TrimCompatabilityExport ( std::string filePath )
+void Diag::TrimCompatabilityExport ( void )
 {
 	std::ifstream file;
 	std::string line;
 
-	file.open ( filePath.c_str(), std::ios::in );
+	file.open ( files[1].c_str(), std::ios::in );
 
 	if ( file )
 	{

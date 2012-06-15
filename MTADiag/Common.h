@@ -22,6 +22,6 @@
 #include <vector>
 #include "Log.h"
 
-#define VERSION "2.3.2"
+#define VERSION "2.3.3"
 
 #endif
