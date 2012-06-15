@@ -68,7 +68,7 @@ namespace Diag {
 	void                    DoSystemCommandWithOutput   ( std::string command );
 	void                    GetDir                      ( std::string directory );
 	void                    ExportRegKeyToFile          ( std::string subkey );
-	void                    TrimCompatabilityExport     ( std::string filePath );
+	void                    TrimCompatabilityExport     ( void );
 	void                    QueryWMIC                   ( std::string, std::string = "", std::string = "", std::string = "" );
 
 	// used for storing environment variables, current system time, files, and some paths
