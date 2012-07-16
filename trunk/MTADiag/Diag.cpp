@@ -142,8 +142,8 @@ void Diag::GeneratePaths ( void )
 	files.push_back ( tempDir + "\\" + logFileName + ".txt" ); // files [0] ... / log file path
 	files.push_back ( tempDir + "\\tempoutput.txt" ); // general temporary output file for almost everything
 	files.push_back ( tempDir + "\\MTANightly.exe" ); // filepath for nightly
-	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as ASCII; convert to unicode for proper insertion & formatting in the log
-	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for this file to see if DirectX is up to date
+	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as Unicode; we convert this file to ASCII for proper insertion & formatting in the log
+	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for the presence of this file to determine if DirectX is up to date
 
 #ifdef DEBUGOUTPUT
 	for ( int i = 0; i < ( signed ) files.size(); i++ )
