@@ -15,9 +15,11 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include "Common.h"
+#include <windows.h>
 
 std::string         ReadRegKey			  ( std::string value, std::string subkey );
 bool                CheckForFile          ( std::string FilePath );
 void                ConvertUnicodeToASCII ( std::string file1, std::string file2 );
+bool                IsVistaOrNewer        ( void );
 
 #endif

@@ -17,7 +17,7 @@
 
 #include "Common.h"
 
-#define CUR_MTA_VERSIONS 6 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4, 1.5
+#define CUR_MTA_VERSIONS 5 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4, 1.5
 
 #define MTAPathValue	"Last Install Location"
 #define MTA11PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1"
@@ -35,6 +35,13 @@
 #define MTA13VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3\\Settings\\general"
 #define MTA14VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4\\Settings\\general"
 #define MTA15VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5\\Settings\\general"
+
+#define MTAShortVerValue    "Last Run Path Version"
+#define MTA11ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1"
+#define MTA12ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2"
+#define MTA13ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3"
+#define MTA14ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4"
+#define MTA15ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5"
 
 #define MTA11NightlyURL "http://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "http://nightly.mtasa.com/?mtasa-1.2-rc-latest"
@@ -75,6 +82,7 @@ namespace Diag {
 	static std::string      logFileName;
 	static std::string      tempDir;
 	static std::string      systemRoot;
+	static std::string      programData;
 	static SYSTEMTIME       sysTime;
 
 	extern std::vector<std::string> files;
@@ -84,6 +92,7 @@ namespace Diag {
 
 	// store current MTA version when GetMTAVersion() is called, and store the original version to dump in the log file
 	static std::string      MTAVersion;
+	static std::string      MTAShortVersion;
 	static std::string      OriginalMTAVersion;
 
 	static std::string      MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed

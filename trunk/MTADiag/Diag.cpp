@@ -78,6 +78,7 @@ void Diag::Begin ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
+	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" );
 
@@ -125,6 +126,7 @@ void Diag::GeneratePaths ( void )
 	// obtain Temp and WINDOWS environment variables, and store system time
 	tempDir = getenv ( "Temp" );            // get the Temp directory
 	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
+	if ( IsVistaOrNewer() ) { programData = getenv ( "ProgramData" ); } // get the ProgramData directory 
 	GetLocalTime ( &sysTime );              // get the current system time
 
 	// generate necessary file paths
@@ -137,11 +139,11 @@ void Diag::GeneratePaths ( void )
 	ss.str ("");
 	ss.clear();
 
-	files.push_back ( tempDir + "\\" + logFileName + ".txt" ); // files [0] ...
-	files.push_back ( tempDir + "\\tempoutput.txt" );
-	files.push_back ( tempDir + "\\MTANightly.exe" );
-	files.push_back ( tempDir + "\\WMICUni.txt" );
-	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" );
+	files.push_back ( tempDir + "\\" + logFileName + ".txt" ); // files [0] ... / log file path
+	files.push_back ( tempDir + "\\tempoutput.txt" ); // general temporary output file for almost everything
+	files.push_back ( tempDir + "\\MTANightly.exe" ); // filepath for nightly
+	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as ASCII; convert to unicode for proper insertion & formatting in the log
+	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for this file to see if DirectX is up to date
 
 #ifdef DEBUGOUTPUT
 	for ( int i = 0; i < ( signed ) files.size(); i++ )
@@ -158,7 +160,7 @@ bool Diag::PollMTAVersions ( void )
 	MTAVersionsInstalled[5] = ReadRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.5 path, if present
 
 	// if a version isn't installed, "Failed to get key." is returned by readRegKey; clear that array element
-	for ( int i = 1; i < CUR_MTA_VERSIONS; i++ )
+	for ( int i = 1; i <= CUR_MTA_VERSIONS; i++ )
 	{
 		if ( !strcmp ( MTAVersionsInstalled[i].c_str(), "Failed to read key." ) )
 			MTAVersionsInstalled[i].assign( "" );
@@ -167,7 +169,7 @@ bool Diag::PollMTAVersions ( void )
 	// check how many versions of MTA:SA are installed; if there's only one, we'll narrow it down and set MTAVerChoice to that version
 	int versionCounter = 0;
 
-	for (int i = 1; i < CUR_MTA_VERSIONS; i++)
+	for (int i = 1; i <= CUR_MTA_VERSIONS; i++)
 	{
 		if ( !MTAVersionsInstalled[i].empty() )
 		{
@@ -183,14 +185,14 @@ bool Diag::PollMTAVersions ( void )
 	// or is not running this program as Administrator when they should be
 	else if ( versionCounter == 0 )
 	{
-		std::cout << "Can't read MTA path." << std::endl << "You are either not running this program as an Administrator," << std::endl;
-		std::cout << "or you may be running a version of MTA older than 1.1." << std::endl;
+		std::cout << "Can't read MTA path." << std::endl;
+		std::cout << "You may be running a version of MTA older than 1.1." << std::endl;
 		std::cout << "Update at www.mtasa.com, then run MTADiag again if necessary." << std::endl;
 		system ( "pause" );
 		exit ( EXIT_FAILURE );
 	}
 	else
-		return false; // return false signifying that there are multiple versions of MTA:SA installed
+		return false; // return false, signifying that there are multiple versions of MTA:SA installed
 }
 
 void Diag::UserPickVersion ( void )
@@ -249,22 +251,27 @@ std::string Diag::GetMTAVersion ( void )
 	{
 	case 1:
 		MTAVersion = ReadRegKey ( MTAVerValue, MTA11VerSubKey );
+		MTAShortVersion = "1.1";
 		return MTAVersion;
 		break;
 	case 2:
 		MTAVersion = ReadRegKey ( MTAVerValue, MTA12VerSubKey );
+		MTAShortVersion = "1.2";
 		return MTAVersion;
 		break;
 	case 3:
 		MTAVersion = ReadRegKey ( MTAVerValue, MTA13VerSubKey );
+		MTAShortVersion = "1.3";
 		return MTAVersion;
 		break;
 	case 4:
 		MTAVersion = ReadRegKey ( MTAVerValue, MTA14VerSubKey );
+		MTAShortVersion = "1.4";
 		return MTAVersion;
 		break;
 	case 5:
 		MTAVersion = ReadRegKey ( MTAVerValue, MTA15VerSubKey );
+		MTAShortVersion = "1.5";
 		return MTAVersion;
 		break;
 	}
