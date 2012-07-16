@@ -135,6 +135,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libcurl.lib"
 				LinkIncremental="1"
+				UACExecutionLevel="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

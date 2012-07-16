@@ -64,3 +64,20 @@ void ConvertUnicodeToASCII ( std::string file1, std::string file2 )
 
 	system ( convert.c_str() );
 }
+
+// slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
+bool IsVistaOrNewer ( void )
+{
+	OSVERSIONINFO osvi;
+	bool bIsVistaOrNewer;
+
+	ZeroMemory ( &osvi, sizeof ( OSVERSIONINFO ) );
+	osvi.dwOSVersionInfoSize = sizeof ( OSVERSIONINFO );
+
+	GetVersionEx ( &osvi );
+
+	if ( bIsVistaOrNewer = ( osvi.dwMajorVersion >= 6 ) )
+		return true;
+	else
+		return false;
+}
