@@ -36,13 +36,6 @@
 #define MTA14VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4\\Settings\\general"
 #define MTA15VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5\\Settings\\general"
 
-#define MTAShortVerValue    "Last Run Path Version"
-#define MTA11ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1"
-#define MTA12ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2"
-#define MTA13ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.3"
-#define MTA14ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4"
-#define MTA15ShortVerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5"
-
 #define MTA11NightlyURL "http://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "http://nightly.mtasa.com/?mtasa-1.2-rc-latest"
 #define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3-rc-latest"
