@@ -17,42 +17,42 @@
 #include "curl/easy.h"
 #include "curl/types.h"
 
-void progress_callback ( void* percent, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL );
-size_t write_data ( void *ptr, size_t size, size_t nmemb, void *stream );
+void progress_callback ( void* percent, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL ); // percentage progress callback
+size_t write_data ( void *ptr, size_t size, size_t nmemb, void *stream ); // writes HTTP response to a string
 
 bool Curl::DownloadFile ( std::string fileURL, std::string filePath )
 {
-	CURL *curl;
-	CURLcode res;
-	curl = curl_easy_init();
-	if ( curl )
+	CURL *curl; // initialize curl
+	CURLcode res; // variable to store curl result
+	curl = curl_easy_init(); // initialize curl_easy
+	if ( curl ) // if curl was initialized
 	{
-		FILE *fp;
-		fopen_s ( &fp, filePath.c_str(), "wb" );
-		curl_easy_setopt ( curl, CURLOPT_URL, fileURL.c_str() );
-		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, fwrite );
-		curl_easy_setopt ( curl, CURLOPT_WRITEDATA, fp );
-		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE );
-		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback );
-		res = curl_easy_perform ( curl );
-		curl_easy_cleanup ( curl );
-		fclose ( fp );
+		FILE *fp; // file pointer
+		fopen_s ( &fp, filePath.c_str(), "wb" ); // open the temporary file download location
+		curl_easy_setopt ( curl, CURLOPT_URL, fileURL.c_str() ); // set the URL
+		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, fwrite ); // set the write function
+		curl_easy_setopt ( curl, CURLOPT_WRITEDATA, fp ); // set the file path
+		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE ); // we want progress
+		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback ); // set the progress callback function
+		res = curl_easy_perform ( curl ); // perform; store result into res
+		curl_easy_cleanup ( curl ); // clean up
+		fclose ( fp ); // close the file
 	}
-	if ( !res )
+	if ( !res ) // if we were successful
 		return true;
-	else
+	else // failure
 		return false;
 }
 
 std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 {
-	CURL *curl;
-	CURLcode res;
-	curl = curl_easy_init();
+	CURL *curl; // initialize curl
+	CURLcode res; // variable to store curl result
+	curl = curl_easy_init(); // initialize curl_easy
 
-	std::string logText;
-	std::string post;
-	std::stringstream ss;
+	std::string logText; // stores entire log file
+	std::string post; // stores POST string
+	std::stringstream ss; // create a stringstream
 	std::ifstream file;
 
 	// read entire MTADiag log into string
@@ -75,7 +75,7 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 		<< curl_easy_escape ( curl, pasteName.c_str(), pasteName.length() ) // urlencode MTADiag log filename
 		<< "&"
 		<< "api_paste_expire_date=1M&" // paste will expire in one month
-		<< "api_dev_key=supply_your_own&" // Pastebin API dev key
+		<< "api_dev_key=384625ea6f332a4eaf07ed02f00d2e2b&" // Pastebin API dev key
 		<< "api_paste_code="
 		<< curl_easy_escape ( curl, logText.c_str(), logText.length() ); // urlencode log file contents
 	post = ss.str();
@@ -84,21 +84,22 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 	ss.str ("");
 	ss.clear();
 
-	if ( curl )
+	if ( curl ) // if curl was initialized
 	{
-		curl_easy_setopt ( curl, CURLOPT_URL, "http://pastebin.com/api/api_post.php" );
-		curl_easy_setopt ( curl, CURLOPT_POSTFIELDS, post.c_str() );
-		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE );
-		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback );
-		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, write_data );
-		res = curl_easy_perform ( curl );
-		curl_easy_cleanup ( curl );
+		curl_easy_setopt ( curl, CURLOPT_URL, "http://pastebin.com/api/api_post.php" ); // set the URL
+		curl_easy_setopt ( curl, CURLOPT_POSTFIELDS, post.c_str() ); // set our log file as the POST field
+		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE ); // we want progress
+		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback ); // set the progress callback function
+		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, write_data ); // set the write function
+		res = curl_easy_perform ( curl ); // perform; store result into res
+		curl_easy_cleanup ( curl ); // clean up
 	}
-	if ( !res )
+	if ( !res ) // if we were successful
 	{
+
 		return response;
 	}
-	else
+	else // failure
 	{
 		return "Failed to upload to Pastebin.";
 	}

@@ -19,6 +19,7 @@
 
 #define CUR_MTA_VERSIONS 5 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4, 1.5
 
+// MTA install path
 #define MTAPathValue	"Last Install Location"
 #define MTA11PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1"
 #define MTA12PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2"
@@ -26,9 +27,11 @@
 #define MTA14PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4"
 #define MTA15PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5"
 
+// GTA:SA path
 #define MTAGTAPathValue  "GTA:SA Path"
 #define MTAGTAPathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\Common"
 
+// Long MTA version string
 #define MTAVerValue    "mta-version-ext"
 #define MTA11VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.1\\Settings\\general"
 #define MTA12VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.2\\Settings\\general"
@@ -36,12 +39,14 @@
 #define MTA14VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4\\Settings\\general"
 #define MTA15VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5\\Settings\\general"
 
+// Nightly download URLs
 #define MTA11NightlyURL "http://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "http://nightly.mtasa.com/?mtasa-1.2-rc-latest"
 #define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3-rc-latest"
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 #define MTA15NightlyURL "http://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
 
+// Compatability mode registry keys
 #define CompatModeRegKey1 "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 #define CompatModeRegKey2 "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 
@@ -65,6 +70,7 @@ namespace Diag {
 	void                    UpdateDirectX               ( void );
 	void                    UpdateMTA                   ( void );
 
+	// information gathering functions
 	void                    DoSystemCommandWithOutput   ( std::string command );
 	void                    GetDir                      ( std::string directory );
 	void                    ExportRegKeyToFile          ( std::string subkey );
@@ -91,7 +97,7 @@ namespace Diag {
 	static std::string      MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed
 	static int              MTAVerChoice;                           // stores user's choice of which MTA version to diagnose
 
-	static std::string      PasteBinResult;
+	static std::string      PasteBinResult;                         // HTTP response
 
 	static bool             DXUpdated;                              // was DirectX updated by MTADiag?
 }
