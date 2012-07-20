@@ -16,27 +16,27 @@
 
 void Log::Open ( std::string filePath )
 {
-	logfile.open ( filePath.c_str(), std::ios::out );
+	logfile.open ( filePath.c_str(), std::ios::out ); // open the log file for writing
 }
 
 void Log::Close ( void )
 {
-	logfile.close();
+	logfile.close(); // close the log file for writing
 }
 
 bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 {
 	std::ifstream file;
-	file.open ( filePath.c_str(), std::ios::out );
+	file.open ( filePath.c_str(), std::ios::out ); // create the file
 
-	if ( !file )
+	if ( !file ) // if we can't create the file
 	{
-		WriteStringToLog ( "Can't open", filePath );
+		WriteStringToLog ( "Can't create", filePath );
 		WriteStringToLog ( "" );
-		return false;
+		return false; // failure!
 	}
 
-	if ( file.peek() == EOF ) { return false; }
+	if ( file.peek() == EOF ) { return false; } // this file is somehow already present; failure!
 
 	// trim any trailing spaces or ">" from system command piping from the item name
 	std::string garbage ( " >" );
@@ -45,24 +45,24 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 	found = itemName.find_last_not_of ( garbage );
 	if ( found != std::string::npos ) { itemName.erase ( found + 1 ); }
 
-	logfile << itemName
-			<< ":"
-			<< std::endl << std::endl
-			<< file.rdbuf()
-			<< std::endl
-			<< std::flush;
+	logfile << itemName // item name
+			<< ":" // colon
+			<< std::endl << std::endl // linebreaks
+			<< file.rdbuf() // file contents
+			<< std::endl // linebreak
+			<< std::flush; // clear the buffer
 
-	file.close();
+	file.close(); // close the file
 
-	return true;
+	return true; // success
 }
 
 void Log::WriteStringToLog ( std::string string, std::string string2, bool endline )
 {
-	logfile << string  
-            << " "
-            << string2;
+	logfile << string // write string1
+            << " " // space
+            << string2; // write string2
 
-	if ( endline )
+	if ( endline ) // add an endline if specified
 		logfile << std::endl;
 }

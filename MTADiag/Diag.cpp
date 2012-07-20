@@ -53,7 +53,7 @@ void Diag::Begin ( void )
 	// write a bunch of information to the log file since we just collected it
 	Log::WriteStringToLog ( "MTA path:            ", MTAPath );
 	Log::WriteStringToLog ( "Old MTA version:     ", OriginalMTAVersion );
-	Log::WriteStringToLog ( "MTA version:         ", MTAVersion );
+	Log::WriteStringToLog ( "New MTA version:         ", MTAVersion );
 	Log::WriteStringToLog ( "GTA path:            ", GTAPath );
 	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "D3D9.dll present:    ", D3D9Present );
@@ -67,6 +67,7 @@ void Diag::Begin ( void )
 	// collect more information and output to log file
 	std::cout << "Gathering information. Please wait..." << std::endl << std::endl;
 
+	// gather the most useful system information first
 #ifndef SKIPDXDIAG
 	DoSystemCommandWithOutput ( "dxdiag /t " );
 #endif
@@ -74,19 +75,23 @@ void Diag::Begin ( void )
 	DoSystemCommandWithOutput ( "ipconfig /all >" );
 	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" );
 
+	// write some of MTA's logs to our log
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
 	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
+	// get some video controller information
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" );
 
+	// export compatibility mode registry keys and export to log only if a match for MTA or GTA is found
 	ExportRegKeyToFile ( CompatModeRegKey1 );
 	TrimCompatabilityExport();
 	ExportRegKeyToFile ( CompatModeRegKey2 );
 	TrimCompatabilityExport();
 
+	// get directory listing of some folders
 	GetDir ( ( MTAPath + "\\MTA" ) );
 	GetDir ( GTAPath );
 	GetDir ( ( GTAPath + "\\models" ) );
@@ -94,10 +99,12 @@ void Diag::Begin ( void )
 	// close the log file for writing
 	Log::Close();
 
+	// upload to PasteBin
 	std::cout << "Log file generated. Uploading to Pastebin..." << std::endl;
 
-	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // upload to Pastebin
+	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // store the POST result into PasteBinResult
 
+	// deal with a couple of errors in case there are any
 	if ( strstr ( PasteBinResult.c_str(), "Bad API request" ) || strstr ( PasteBinResult.c_str(), "Post limit" ) )
 	{
 		std::cout << std::endl << std::endl << "Failed to upload log file to Pastebin." << std::endl;
@@ -106,7 +113,7 @@ void Diag::Begin ( void )
 		std::cout << "Include the Pastebin link in your forum post." << std::endl << std::endl;
 		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
 	}
-	else
+	else // upload successful; open the pasted log file in a browser window
 	{
 		std::cout << "Log file uploaded to Pastebin. Please include the Pastebin link in your forum post." << std::endl;
 		ShellExecute ( NULL, "open", PasteBinResult.c_str(), NULL, NULL, SW_SHOW );
@@ -145,6 +152,7 @@ void Diag::GeneratePaths ( void )
 	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as Unicode; we convert this file to ASCII for proper insertion & formatting in the log
 	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for the presence of this file to determine if DirectX is up to date
 
+	// output contents of files vector
 #ifdef DEBUGOUTPUT
 	for ( int i = 0; i < ( signed ) files.size(); i++ )
 		std::cout << i << " " << files[i] << std::endl;
@@ -181,8 +189,7 @@ bool Diag::PollMTAVersions ( void )
 	// there's only one version of MTA:SA installed, so return true and continue with diagnostics
 	if ( versionCounter == 1 )
 		return true;
-	// the user doesn't seem to have any version of MTA:SA installed, is running a version of MTA:SA older than 1.1,
-	// or is not running this program as Administrator when they should be
+	// the user doesn't seem to have any version of MTA:SA installed; they are probably running a version of MTA:SA older than 1.1
 	else if ( versionCounter == 0 )
 	{
 		std::cout << "Can't read MTA path." << std::endl;
@@ -200,7 +207,6 @@ void Diag::UserPickVersion ( void )
 	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to update and diagnose:" << std::endl;
 
 	// iterate through currently installed MTA versions and output them
-	// it'd be nice to number these sequentually even if an MTA:SA version is missing, i.e. [1] 1.4 [2] 1.3 [3] 1.1 but meh, too much work for no gain
 	for (int i = 1; i < CUR_MTA_VERSIONS; i++)
 	{
 		if ( !MTAVersionsInstalled[i].empty() )
@@ -287,10 +293,11 @@ std::string Diag::GetGamePath( void )
 void Diag::UpdateMTA ( void )
 {
 	std::string url;
-	char works;
+	char works; // stores user's input
 
 	std::cout << "MTADiag will now download the latest patch of MTA:SA." << std::endl;
 
+	// set the nightly URL according to the version of MTA we're diagnosing
 	switch ( MTAVerChoice )
 	{
 	case 1:
@@ -311,71 +318,68 @@ void Diag::UpdateMTA ( void )
 	}
 
 #ifndef SKIPUPDATE
-	if ( Curl::DownloadFile (url, files[2].c_str() ) )
+	if ( Curl::DownloadFile ( url, files[2].c_str() ) ) // if the download was successful, open the installer
 	{
-		std::ifstream ifile ( files[2].c_str()  );
-		if ( ifile )
-		{
-			std::cout << std::endl << "Launching the installer..." << std::endl;
-			std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
-			system ( files[2].c_str()  );
-		}
+		std::cout << std::endl << "Launching the installer..." << std::endl;
+		std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
+		system ( files[2].c_str()  );
 	}
-	else
+	else // if the download failed, open a browser window to start the download of the nightly
 	{
 		std::cout << "Unable to automatically download MTA patch. Launching download link..." << std::endl;
-		system ("pause");
+		system ("pause"); // wait for user acknowledgement
 		ShellExecute ( NULL, "open", url.c_str(), NULL, NULL, SW_HIDE );
 		std::cout << std::endl << "Install the patch. ";
 	}
 #endif
 
 	std::cout << "If MTA works now, enter 'y' to quit MTADiag." << std::endl << "If it doesn't, enter 'n' to continue diagnostics." << std::endl;
-	std::cin >> works;
+	std::cin >> works; // get user input
 
 	if ( works == 'y' )
 	{
 		std::cout << "Enjoy playing MTA!" << std::endl;
-		Cleanup();
+		Cleanup(); // delete any temporary files
 		remove ( Diag::files[0].c_str() ); // remove the generated MTADiag log
-		system ( "pause" );
+		system ( "pause" ); // wait for user acknowledgement
 		exit ( EXIT_SUCCESS );
 	}
 	else
-		std::cout << "MTA version is now: " << GetMTAVersion() << std::endl << std::endl;
+		std::cout << "MTA version is now: " << GetMTAVersion() << std::endl << std::endl; // tell the user the updated version string
 }
 
 void Diag::UpdateDirectX ( void )
 {
-	std::string DXWebSetupPath = ( tempDir + "\\dxwebsetup.exe" );
+	std::string DXWebSetupPath = ( tempDir + "\\dxwebsetup.exe" ); // get the temporary file path
 
-	std::string DXWebSetupURL = "http://download.microsoft.com/download/1/7/1/1718CCC4-6315-4D8E-9543-8E28A4E18C4C/dxwebsetup.exe";
+	std::string DXWebSetupURL = "http://download.microsoft.com/download/1/7/1/1718CCC4-6315-4D8E-9543-8E28A4E18C4C/dxwebsetup.exe"; // DXWebSetup URL
 
 	// tell the user what we're doing
 	std::cout << "DirectX is not up-to-date." << std::endl;
 	std::cout << "Downloading web updater..." << std::endl;
 
-	if ( Curl::DownloadFile ( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) )
+	// attempt to download the file
+	if ( Curl::DownloadFile ( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) ) // success! open the file
 	{
 		std::cout << std::endl << "Follow the instructions to update DirectX." << std::endl << std::endl;
 		system ( DXWebSetupPath.c_str() );
 	}
-	else
+	else // failure; open a browser window to start the download of DXWebSetup
 	{
 		std::cout << "Unable to automatically download DirectX updater. Launching download link..." << std::endl;
-		system ( "pause" );
+		system ( "pause" ); // wait for user acknowledgement
 		ShellExecute ( NULL, "open", DXWebSetupURL.c_str(), NULL, NULL, SW_HIDE );
 		std::cout << "Continue when DirectX has finished updating." << std::endl;
-		system( "pause" );
+		system ( "pause" ); // wait for user acknowledgement
 	}
-	remove( DXWebSetupPath.c_str() );
+	remove( DXWebSetupPath.c_str() ); // delete the temporary file
 }
 
 void Diag::DoSystemCommandWithOutput ( std::string command )
 {
-	system ( ( command + files[1] ).c_str() );
+	system ( ( command + files[1] ).c_str() ); // do the command
 
-	Log::WriteFileToLog ( files[1], command );
+	Log::WriteFileToLog ( files[1], command ); // write the result to the log file with the command as a description
 }
 
 void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )
@@ -383,20 +387,20 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std
 	std::string WMIC;
 	std::stringstream ss; // create a stringstream
 
-	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[3].c_str();
+	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[3].c_str(); // wmic <arg1> <arg2> <arg3> <arg4>
 	WMIC = ss.str ();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
-	system ( WMIC.c_str() );
+	system ( WMIC.c_str() ); // do it
 
-	ConvertUnicodeToASCII ( files[3], files[1] );
+	ConvertUnicodeToASCII ( files[3], files[1] ); // convert the Unicode-encoded result to ASCII for proper display in the log file
 
-	remove ( files[3].c_str() );
+	remove ( files[3].c_str() ); // delete the Unicode-encoded log file
 
-	Log::WriteFileToLog ( files[1], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) );
+	Log::WriteFileToLog ( files[1], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) ); // write the result to the log file with a description
 }
 
 void Diag::GetDir ( std::string directory )
@@ -404,16 +408,16 @@ void Diag::GetDir ( std::string directory )
 	std::string dirPath;
 	std::stringstream ss; // create a stringstream
 
-	ss << "dir \"" << directory << "\" >\"" << files[1].c_str() << "\"";
+	ss << "dir \"" << directory << "\" >\"" << files[1].c_str() << "\""; // dir "<filepath>"
 	dirPath = ss.str();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
-	system ( dirPath.c_str() );
+	system ( dirPath.c_str() ); // do it
 
-	Log::WriteFileToLog ( files[1].c_str(), ( directory + " directory listing" ) );
+	Log::WriteFileToLog ( files[1].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
 }
 
 void Diag::ExportRegKeyToFile ( std::string subkey )
@@ -421,14 +425,14 @@ void Diag::ExportRegKeyToFile ( std::string subkey )
 	std::string ExportReg;
 	std::stringstream ss; // create a stringstream
 
-	ss << "regedit /e /a " << files[1] << " \"" << subkey << "\"";
+	ss << "regedit /e /a " << files[1] << " \"" << subkey << "\""; // regedit EXPORT ASCII <filename> <subkey>
 	ExportReg = ss.str();
 
 	// clear the stringstream
 	ss.str ("");
 	ss.clear();
 
-	system ( ExportReg.c_str() );
+	system ( ExportReg.c_str() ); // do it
 }
 
 void Diag::TrimCompatabilityExport ( void )
@@ -436,15 +440,15 @@ void Diag::TrimCompatabilityExport ( void )
 	std::ifstream file;
 	std::string line;
 
-	file.open ( files[1].c_str(), std::ios::in );
+	file.open ( files[1].c_str(), std::ios::in ); // open the file with the exported registry key
 
-	if ( file )
+	if ( file ) // if file exists
 	{
-		while ( !file.eof() )
+		while ( !file.eof() ) // while we haven't hit the end of the file
 		{
-			getline ( file, line );
+			getline ( file, line ); // read one line
 
-			if ( strstr ( line.c_str(), "gta_sa.exe" ) || strstr ( line.c_str(), "Multi Theft Auto.exe" ) )
+			if ( strstr ( line.c_str(), "gta_sa.exe" ) || strstr ( line.c_str(), "Multi Theft Auto.exe" ) ) // if we get a filename match, output it to the log file
 			{
 				Log::WriteStringToLog ( "Compatibility registry entry match:", line );
 				Log::WriteStringToLog ( "" );
@@ -453,5 +457,5 @@ void Diag::TrimCompatabilityExport ( void )
 	}
 	Log::WriteStringToLog ( "" );
 
-	file.close();
+	file.close(); // close the file for writing
 }
