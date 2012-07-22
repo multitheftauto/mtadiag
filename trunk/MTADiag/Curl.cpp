@@ -75,7 +75,7 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 		<< curl_easy_escape ( curl, pasteName.c_str(), pasteName.length() ) // urlencode MTADiag log filename
 		<< "&"
 		<< "api_paste_expire_date=1M&" // paste will expire in one month
-		<< "api_dev_key=384625ea6f332a4eaf07ed02f00d2e2b&" // Pastebin API dev key
+		<< "api_dev_key=use_your_own&" // Pastebin API dev key
 		<< "api_paste_code="
 		<< curl_easy_escape ( curl, logText.c_str(), logText.length() ); // urlencode log file contents
 	post = ss.str();
