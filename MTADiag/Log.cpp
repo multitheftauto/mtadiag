@@ -31,7 +31,7 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 
 	if ( !file ) // if we can't create the file
 	{
-		WriteStringToLog ( "Can't create", filePath );
+		WriteStringToLog ( "Can't access ", filePath );
 		WriteStringToLog ( "" );
 		return false; // failure!
 	}

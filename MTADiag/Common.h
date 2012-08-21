@@ -12,8 +12,8 @@
 * 
 *****************************************************************************/ 
 
-#ifndef COMMON_H
-#define COMMON_H
+#pragma once
+
 #include <iostream>
 #include <windows.h>
 #include <string>
@@ -22,6 +22,4 @@
 #include <vector>
 #include "Log.h"
 
-#define VERSION "2.3.5"
-
-#endif
+#define VERSION "2.4"

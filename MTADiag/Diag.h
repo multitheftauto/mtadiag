@@ -12,8 +12,7 @@
 * 
 *****************************************************************************/ 
 
-#ifndef DIAG_H
-#define DIAG_H
+#pragma once
 
 #include "Common.h"
 
@@ -46,9 +45,8 @@
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 #define MTA15NightlyURL "http://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
 
-// Compatability mode registry keys
-#define CompatModeRegKey1 "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
-#define CompatModeRegKey2 "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
+// Compatability mode registry key
+#define CompatModeRegKey "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 
 namespace Diag {
 
@@ -73,8 +71,6 @@ namespace Diag {
 	// information gathering functions
 	void                    DoSystemCommandWithOutput   ( std::string command );
 	void                    GetDir                      ( std::string directory );
-	void                    ExportRegKeyToFile          ( std::string subkey );
-	void                    TrimCompatabilityExport     ( void );
 	void                    QueryWMIC                   ( std::string, std::string = "", std::string = "", std::string = "" );
 
 	// used for storing environment variables, current system time, files, and some paths
@@ -99,7 +95,7 @@ namespace Diag {
 
 	static std::string      PasteBinResult;                         // HTTP response
 
+	static bool             CompatRemoved1;                         // were any compatibility mode registry settings removed?
+	static bool             CompatRemoved2;                         // were any compatibility mode registry settings removed?
 	static bool             DXUpdated;                              // was DirectX updated by MTADiag?
 }
-
-#endif
