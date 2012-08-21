@@ -12,14 +12,13 @@
 * 
 *****************************************************************************/ 
 
-#ifndef UTIL_H
-#define UTIL_H
+#pragma once
+
 #include "Common.h"
-#include <windows.h>
 
-std::string         ReadRegKey			  ( std::string value, std::string subkey );
-bool                CheckForFile          ( std::string FilePath );
-void                ConvertUnicodeToASCII ( std::string file1, std::string file2 );
-bool                IsVistaOrNewer        ( void );
-
-#endif
+std::string         ReadRegKey			               ( std::string value, std::string subkey );
+bool                DeleteCompatibilityEntries         ( std::string subkey, HKEY hKeyType );
+bool                CheckForFile                       ( std::string FilePath );
+void                ConvertUnicodeToASCII              ( std::string file1, std::string file2 );
+bool                IsVistaOrNewer                     ( void );
+bool                IsWin8OrNewer                      ( void );

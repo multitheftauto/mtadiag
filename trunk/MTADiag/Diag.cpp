@@ -47,21 +47,29 @@ void Diag::Begin ( void )
 	if ( CheckForFile( files[4].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
 
+	// remove any compatibility mode settings on gta_sa.exe and/or Multi Theft Auto.exe
+	CompatRemoved1 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_CURRENT_USER );
+	CompatRemoved2 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_LOCAL_MACHINE );
+
 	// update MTA to latest nightly/unstable build, depending on the version
 	UpdateMTA();
 
 	// write a bunch of information to the log file since we just collected it
-	Log::WriteStringToLog ( "MTA path:            ", MTAPath );
-	Log::WriteStringToLog ( "Old MTA version:     ", OriginalMTAVersion );
-	Log::WriteStringToLog ( "New MTA version:         ", MTAVersion );
-	Log::WriteStringToLog ( "GTA path:            ", GTAPath );
+	Log::WriteStringToLog ( "MTA path:             ", MTAPath );
+	Log::WriteStringToLog ( "Old MTA version:      ", OriginalMTAVersion );
+	Log::WriteStringToLog ( "New MTA version:      ", MTAVersion );
+	Log::WriteStringToLog ( "GTA path:             ", GTAPath );
+
 	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
-	Log::WriteStringToLog ( "D3D9.dll present:    ", D3D9Present );
+	Log::WriteStringToLog ( "D3D9.dll present:     ", D3D9Present );
 
 	std::string DirectXState = ( CheckForFile ( files[4] ) ) ? "Yes" : "No";
-	Log::WriteStringToLog ( "DirectX up-to-date:  ", DirectXState );
-	if ( DXUpdated == 1 )
-		Log::WriteStringToLog ( "DirectX was updated:  Yes");
+	Log::WriteStringToLog ( "DirectX up-to-date:   ", DirectXState );
+	if ( DXUpdated == 0 )
+		Log::WriteStringToLog ( "DirectX was updated:   Yes");
+
+	if ( CompatRemoved1 == true || CompatRemoved2 == true )
+		Log::WriteStringToLog ( "Compat. mode deleted:  Yes");
 	Log::WriteStringToLog ( "" );
 
 	// collect more information and output to log file
@@ -72,8 +80,6 @@ void Diag::Begin ( void )
 	DoSystemCommandWithOutput ( "dxdiag /t " );
 #endif
 	DoSystemCommandWithOutput ( "tasklist >" );
-	DoSystemCommandWithOutput ( "ipconfig /all >" );
-	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" );
 
 	// write some of MTA's logs to our log
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
@@ -82,14 +88,9 @@ void Diag::Begin ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
 	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
-	// get some video controller information
-	QueryWMIC ( "Path", "Win32_VideoController", "Get" );
-
-	// export compatibility mode registry keys and export to log only if a match for MTA or GTA is found
-	ExportRegKeyToFile ( CompatModeRegKey1 );
-	TrimCompatabilityExport();
-	ExportRegKeyToFile ( CompatModeRegKey2 );
-	TrimCompatabilityExport();
+	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
+	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" ); // might help resolve Visual C++ runtime issues
+	QueryWMIC ( "Path", "Win32_VideoController", "Get" ); // get some video controller information
 
 	// get directory listing of some folders
 	GetDir ( ( MTAPath + "\\MTA" ) );
@@ -102,7 +103,7 @@ void Diag::Begin ( void )
 	// upload to PasteBin
 	std::cout << "Log file generated. Uploading to Pastebin..." << std::endl;
 
-	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // store the POST result into PasteBinResult
+	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // store the HTTP POST result into PasteBinResult
 
 	// deal with a couple of errors in case there are any
 	if ( strstr ( PasteBinResult.c_str(), "Bad API request" ) || strstr ( PasteBinResult.c_str(), "Post limit" ) )
@@ -116,7 +117,7 @@ void Diag::Begin ( void )
 	else // upload successful; open the pasted log file in a browser window
 	{
 		std::cout << "Log file uploaded to Pastebin. Please include the Pastebin link in your forum post." << std::endl;
-		ShellExecute ( NULL, "open", PasteBinResult.c_str(), NULL, NULL, SW_SHOW );
+		ShellExecute ( NULL, "open", "rundll32.exe", ( "url.dll,FileProtocolHandler " + PasteBinResult ).c_str(), NULL, SW_SHOW );
 	}
 }
 
@@ -124,7 +125,7 @@ void Diag::Cleanup ( void )
 {
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
-	for (int i = 1; i < ( signed ) files.size() - 1; i++) // don't delete D3DX9_43.dll
+	for ( unsigned int i = 1; i < files.size() - 1; i++) // don't delete D3DX9_43.dll
 		remove ( files[i].c_str() );
 }
 
@@ -154,7 +155,7 @@ void Diag::GeneratePaths ( void )
 
 	// output contents of files vector
 #ifdef DEBUGOUTPUT
-	for ( int i = 0; i < ( signed ) files.size(); i++ )
+	for ( unsigned int i = 0; i < files.size(); i++ )
 		std::cout << i << " " << files[i] << std::endl;
 #endif
 }
@@ -418,44 +419,4 @@ void Diag::GetDir ( std::string directory )
 	system ( dirPath.c_str() ); // do it
 
 	Log::WriteFileToLog ( files[1].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
-}
-
-void Diag::ExportRegKeyToFile ( std::string subkey )
-{
-	std::string ExportReg;
-	std::stringstream ss; // create a stringstream
-
-	ss << "regedit /e /a " << files[1] << " \"" << subkey << "\""; // regedit EXPORT ASCII <filename> <subkey>
-	ExportReg = ss.str();
-
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	system ( ExportReg.c_str() ); // do it
-}
-
-void Diag::TrimCompatabilityExport ( void )
-{
-	std::ifstream file;
-	std::string line;
-
-	file.open ( files[1].c_str(), std::ios::in ); // open the file with the exported registry key
-
-	if ( file ) // if file exists
-	{
-		while ( !file.eof() ) // while we haven't hit the end of the file
-		{
-			getline ( file, line ); // read one line
-
-			if ( strstr ( line.c_str(), "gta_sa.exe" ) || strstr ( line.c_str(), "Multi Theft Auto.exe" ) ) // if we get a filename match, output it to the log file
-			{
-				Log::WriteStringToLog ( "Compatibility registry entry match:", line );
-				Log::WriteStringToLog ( "" );
-			}
-		}
-	}
-	Log::WriteStringToLog ( "" );
-
-	file.close(); // close the file for writing
 }
