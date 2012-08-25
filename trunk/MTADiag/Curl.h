@@ -12,8 +12,8 @@
 * 
 *****************************************************************************/ 
 
-#ifndef CCURL_H
-#define CCURL_H
+#pragma once
+
 #include "Common.h"
 
 namespace Curl {
@@ -23,5 +23,3 @@ namespace Curl {
 
 	static std::string    response;               // HTTP POST response
 }
-
-#endif

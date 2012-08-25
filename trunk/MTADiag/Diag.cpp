@@ -65,7 +65,7 @@ void Diag::Begin ( void )
 
 	std::string DirectXState = ( CheckForFile ( files[4] ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "DirectX up-to-date:   ", DirectXState );
-	if ( DXUpdated == 0 )
+	if ( DXUpdated == 1 )
 		Log::WriteStringToLog ( "DirectX was updated:   Yes");
 
 	if ( CompatRemoved1 == true || CompatRemoved2 == true )

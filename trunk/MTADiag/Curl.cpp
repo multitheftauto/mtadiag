@@ -105,14 +105,14 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 	}
 }
 
-void progress_callback ( void* percent, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL )
+void progress_callback ( void*, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL )
 {
 	if ( TotalToDL > 0 ) { printf ( "Downloaded: %3.0f%%\r", CurrentDL/TotalToDL * 100 ); }
 	else { printf ( "Uploaded: %3.0f%%\r", CurrentUL/TotalToUL * 100 ); }
 	fflush ( stdout );
 }
 
-size_t write_data ( void* ptr, size_t size, size_t nmemb, void* stream )
+size_t write_data ( void* ptr, size_t size, size_t nmemb, void* )
 {
 	std::string temp ( static_cast <const char*> ( ptr ), size* nmemb );
     Curl::response.append ( temp );
