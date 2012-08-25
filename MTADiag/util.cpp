@@ -103,8 +103,8 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 				}
 			}
 		}
-		return changed;
 		RegCloseKey ( hKey ); // close the registry key
+		return changed;
 	}
 	else
 	{
@@ -147,7 +147,7 @@ bool IsVistaOrNewer ( void )
 
 	GetVersionEx ( &osvi );
 
-	if ( bIsVistaOrNewer = ( osvi.dwMajorVersion >= 6 ) )
+	if ( ( bIsVistaOrNewer = ( osvi.dwMajorVersion >= 6 ) ) != 0 )
 		return true;
 	else
 		return false;
@@ -164,7 +164,7 @@ bool IsWin8OrNewer ( void )
 
 	GetVersionEx ( &osvi );
 
-	if ( bIsWin8OrNewer = ( osvi.dwMajorVersion >= 6 && osvi.dwMinorVersion >= 2 )  )
+	if ( ( bIsWin8OrNewer = ( osvi.dwMajorVersion >= 6 && osvi.dwMinorVersion >= 2 ) ) != 0 )
 		return true;
 	else
 		return false;

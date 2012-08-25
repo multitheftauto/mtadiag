@@ -12,8 +12,7 @@
 * 
 *****************************************************************************/ 
 
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
 #include "Common.h"
 
@@ -27,5 +26,3 @@ namespace Log {
 
 	static std::ofstream    logfile;
 }
-
-#endif
