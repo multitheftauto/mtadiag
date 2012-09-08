@@ -48,8 +48,12 @@ void Diag::Begin ( void )
 	else { UpdateDirectX(); DXUpdated = 1; }
 
 	// remove any compatibility mode settings on gta_sa.exe and/or Multi Theft Auto.exe
+
+	// check HKCU first
 	CompatRemoved1 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_CURRENT_USER );
-	CompatRemoved2 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_LOCAL_MACHINE );
+	// check HKLM for compat. mode settings set for all users
+	// only check 32-bit OSes due to compat. mode settings *NOT* being written to Wow6432Node on 64-bit OSes, and I can't seem to query non-Wow6432Node keys
+	if ( !bIsWOW64 ) { CompatRemoved2 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_LOCAL_MACHINE ); }
 
 	// update MTA to latest nightly/unstable build, depending on the version
 	UpdateMTA();
@@ -86,7 +90,7 @@ void Diag::Begin ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
-	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
+	if ( bIsVistaOrNewer ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
 	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
 	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" ); // might help resolve Visual C++ runtime issues
@@ -97,6 +101,11 @@ void Diag::Begin ( void )
 	GetDir ( GTAPath );
 	GetDir ( ( GTAPath + "\\models" ) );
 
+	// font diagnostics
+	Log::WriteStringToLog ( "Verdana (TrueType) registry value:", ReadRegKey ( "Verdana (TrueType)", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" ) );
+	Log::WriteStringToLog ( "" );
+	GetDir ( systemRoot + "\\fonts\\verd*" );
+
 	// close the log file for writing
 	Log::Close();
 
@@ -105,19 +114,26 @@ void Diag::Begin ( void )
 
 	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // store the HTTP POST result into PasteBinResult
 
-	// deal with a couple of errors in case there are any
-	if ( strstr ( PasteBinResult.c_str(), "Bad API request" ) || strstr ( PasteBinResult.c_str(), "Post limit" ) )
+	// upload successful; copy URL to clipboard
+	if ( strstr ( PasteBinResult.c_str(), "http://pastebin.com/" ) )
+	{
+		if ( CopyToClipboard ( PasteBinResult ) ) // was copying to clipboard successful?
+		{
+			std::cout << "Pastebin link copied to your clipboard." << std::endl << "Please include the Pastebin link in your forum post." << std::endl;
+		}
+		else // just in case that didn't work
+		{
+			std::cout << "Log file uploaded to Pastebin. Please include the Pastebin link in your forum post:" << std::endl;
+			std::cout << PasteBinResult << std::endl;
+		}
+	}
+	else // upload failure
 	{
 		std::cout << std::endl << std::endl << "Failed to upload log file to Pastebin." << std::endl;
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
 		std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
-		std::cout << "Include the Pastebin link in your forum post." << std::endl << std::endl;
+		std::cout << "Include the Pastebin link in your forum post." << std::endl << std::endl;	
 		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
-	}
-	else // upload successful; open the pasted log file in a browser window
-	{
-		std::cout << "Log file uploaded to Pastebin. Please include the Pastebin link in your forum post." << std::endl;
-		ShellExecute ( NULL, "open", "rundll32.exe", ( "url.dll,FileProtocolHandler " + PasteBinResult ).c_str(), NULL, SW_SHOW );
 	}
 }
 
@@ -132,9 +148,11 @@ void Diag::Cleanup ( void )
 void Diag::GeneratePaths ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
+	bIsVistaOrNewer = IsVistaOrNewer();      // is the user running Vista or newer?
 	tempDir = getenv ( "Temp" );            // get the Temp directory
 	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
-	if ( IsVistaOrNewer() ) { programData = getenv ( "ProgramData" ); } // get the ProgramData directory 
+	if ( bIsVistaOrNewer ) { programData = getenv ( "ProgramData" ); } // get the ProgramData directory 
+	IsWow64Process ( GetCurrentProcess(), &bIsWOW64 ); // is MTADiag running under WOW64?
 	GetLocalTime ( &sysTime );              // get the current system time
 
 	// generate necessary file paths

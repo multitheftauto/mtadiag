@@ -41,12 +41,9 @@
 // Nightly download URLs
 #define MTA11NightlyURL "http://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "http://nightly.mtasa.com/?mtasa-1.2-rc-latest"
-#define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3-rc-latest"
+#define MTA13NightlyURL "http://nightly.mtasa.com/?mtasa-1.3.1-rc-latest"
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 #define MTA15NightlyURL "http://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
-
-// Compatability mode registry key
-#define CompatModeRegKey "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 
 namespace Diag {
 
@@ -79,6 +76,8 @@ namespace Diag {
 	static std::string      systemRoot;
 	static std::string      programData;
 	static SYSTEMTIME       sysTime;
+	static bool             bIsVistaOrNewer;
+	static BOOL             bIsWOW64;
 
 	extern std::vector<std::string> files;
 
