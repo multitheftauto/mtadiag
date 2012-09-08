@@ -55,7 +55,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 
 	bool changed = false;
 
-	if ( RegOpenKeyEx ( hKeyType, subkey.c_str(), NULL, KEY_ALL_ACCESS, &hKey ) == ERROR_SUCCESS ) // if registry key read was successfully
+	if ( RegOpenKeyEx ( hKeyType, subkey.c_str(), NULL, KEY_READ | KEY_WRITE, &hKey ) == ERROR_SUCCESS ) // if registry key read was successfully
 	{
 		while ( result != ERROR_NO_MORE_ITEMS ) // loop until we run out of registry values to read
 		{
@@ -69,10 +69,9 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 				{
 					if ( RegQueryValueEx ( hKey, buf, NULL, &dwType, ( BYTE* ) buf2, &dwBuf2Size ) == ERROR_SUCCESS ) // read the value's data
 					{
-
 						if ( strcmp ( buf2, "~ RUNASADMIN" ) == 0 || strcmp ( buf2, "RUNASADMIN" ) == 0 ) // is the value's data already just "RUNASADMIN"?
 						{
-							continue; // break since we don't need to do anything
+							continue; // continue since we don't need to do anything
 						}
 
 						if ( strstr ( buf2, "RUNASADMIN" ) ) // does it contain "RUNASADMIN" along with something else?
@@ -82,6 +81,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 								char Win8Data[13] = "~ RUNASADMIN"; // set the data buffer to the proper string
 								RegSetValueEx ( hKey, buf, 0, dwType, ( BYTE* ) Win8Data, sizeof (Win8Data) ); // set the value data to RUNASADMIN only
 								changed = true;
+								index--;
 								continue;
 							}
 							else // 7 or older
@@ -89,6 +89,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 								char XPData[11] = "RUNASADMIN"; // set the data buffer to the proper string
 								RegSetValueEx ( hKey, buf, 0, dwType, ( BYTE* ) XPData, sizeof (XPData) ); // set the value data to RUNASADMIN only
 								changed = true;
+								index--;
 								continue;
 							}
 						}
@@ -97,6 +98,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 						{
 							RegDeleteValue ( hKey, buf ); // delete the registry value
 							changed = true;
+							index--;
 							continue;
 						}
 					}
@@ -134,6 +136,32 @@ void ConvertUnicodeToASCII ( std::string file1, std::string file2 )
 	ss.clear();
 
 	system ( convert.c_str() ); // do it
+}
+
+bool CopyToClipboard ( std::string contents )
+{
+	HGLOBAL hGlobal = GlobalAlloc ( GMEM_MOVEABLE, contents.length() + 1 ); // get a handle to store our data in the clipboard
+
+	if ( hGlobal ) // if handle was allocated successfully
+	{
+		char *szData = ( char * ) GlobalLock ( hGlobal ); // allocate a handle for the data
+
+		strcpy_s ( szData, contents.length() + 1, contents.c_str() ); // copy data to clipboard
+
+		GlobalUnlock ( hGlobal ); // free the handle
+
+		OpenClipboard ( NULL ); // open the clipboard
+
+		EmptyClipboard(); // empty any previous contents
+
+		SetClipboardData ( CF_TEXT, hGlobal ); // set the clipboard data to the Pastebin URL
+
+		CloseClipboard(); // close the clipboard
+
+		return true; // success
+	}
+	else
+		return false; // failure
 }
 
 // slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
