@@ -76,7 +76,6 @@ namespace Diag {
 	static std::string      systemRoot;
 	static std::string      programData;
 	static SYSTEMTIME       sysTime;
-	static bool             bIsVistaOrNewer;
 	static BOOL             bIsWOW64;
 
 	extern std::vector<std::string> files;

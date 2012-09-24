@@ -197,3 +197,45 @@ bool IsWin8OrNewer ( void )
 	else
 		return false;
 }
+
+std::string GetFileMD5 ( std::string filename )
+{
+	FILE *fp; // file pointer
+
+	fopen_s ( &fp, filename.c_str(), "rb" ); // try to open the file
+
+	if ( fp == NULL ) // we can't open it
+	{
+		return ( "Unable to open " + filename + " for MD5 checksum." );
+	}
+
+	MD5 md5; // initialize MD5
+
+	std::string md5sum; // string to store md5sum
+
+	unsigned char buffer[4096]; // file buffer
+
+	// read all bytes throughout the file
+	while ( !feof ( fp ) )
+	{
+		unsigned int read = fread ( buffer, 1, 4096, fp );
+
+		// update the MD5 with what we just read
+		md5.update ( buffer, read );
+	}
+
+	md5.finalize(); // create a digest from the MD5 result
+
+	fclose ( fp ); // close the file
+
+	std::stringstream ss; // create a stringstream
+
+	ss << "MD5sum for " << filename << ": " << md5;
+	md5sum = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	return md5sum;
+}

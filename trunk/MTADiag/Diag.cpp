@@ -90,7 +90,7 @@ void Diag::Begin ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
-	if ( bIsVistaOrNewer ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
+	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
 	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
 	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" ); // might help resolve Visual C++ runtime issues
@@ -101,10 +101,15 @@ void Diag::Begin ( void )
 	GetDir ( GTAPath );
 	GetDir ( ( GTAPath + "\\models" ) );
 
+	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
+	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\models\\gta3.img" ) );
+	Log::WriteStringToLog ( "" );
+
 	// font diagnostics
 	Log::WriteStringToLog ( "Verdana (TrueType) registry value:", ReadRegKey ( "Verdana (TrueType)", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" ) );
+	Log::WriteStringToLog ( GetFileMD5 ( systemRoot + "\\Fonts\\verdana.ttf" ) );
 	Log::WriteStringToLog ( "" );
-	GetDir ( systemRoot + "\\fonts\\verd*" );
+	GetDir ( systemRoot + "\\Fonts\\verd*" );
 
 	// close the log file for writing
 	Log::Close();
@@ -148,10 +153,9 @@ void Diag::Cleanup ( void )
 void Diag::GeneratePaths ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
-	bIsVistaOrNewer = IsVistaOrNewer();      // is the user running Vista or newer?
 	tempDir = getenv ( "Temp" );            // get the Temp directory
 	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
-	if ( bIsVistaOrNewer ) { programData = getenv ( "ProgramData" ); } // get the ProgramData directory 
+	programData = getenv ( "AllUsersProfile" ); // get the ProgramData directory 
 	IsWow64Process ( GetCurrentProcess(), &bIsWOW64 ); // is MTADiag running under WOW64?
 	GetLocalTime ( &sysTime );              // get the current system time
 
