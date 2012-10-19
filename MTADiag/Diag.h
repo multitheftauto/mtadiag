@@ -52,6 +52,7 @@ namespace Diag {
 
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
 	void                    GeneratePaths               ( void );
+	void                    GenerateGTAFiles            ( void );
 	bool                    PollMTAVersions             ( void );
 	void                    UserPickVersion             ( void );
 
@@ -79,6 +80,9 @@ namespace Diag {
 	static BOOL             bIsWOW64;
 
 	extern std::vector<std::string> files;
+	static std::vector<std::string> GTAFiles;
+
+	static bool             bQuit;
 
 	static std::string      MTAPath;
 	static std::string      GTAPath;
