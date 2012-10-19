@@ -182,6 +182,23 @@ bool IsVistaOrNewer ( void )
 }
 
 // slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
+bool IsWin7 ( void )
+{
+	OSVERSIONINFO osvi;
+	bool bIsWin7OrNewer;
+
+	ZeroMemory ( &osvi, sizeof ( OSVERSIONINFO ) );
+	osvi.dwOSVersionInfoSize = sizeof ( OSVERSIONINFO );
+
+	GetVersionEx ( &osvi );
+
+	if ( ( bIsWin7OrNewer = ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1 ) ) != 0 )
+		return true;
+	else
+		return false;
+}
+
+// slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
 bool IsWin8OrNewer ( void )
 {
 	OSVERSIONINFO osvi;
