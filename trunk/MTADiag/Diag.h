@@ -48,7 +48,7 @@
 namespace Diag {
 
 	void                    Begin                       ( void );
-	void                    Cleanup                     ( void );
+	void                    Cleanup                     ( bool deleteLog = false );
 
 	// gather all currently installed MTA:SA versions and ask the user to pick between them if necessary
 	void                    GeneratePaths               ( void );

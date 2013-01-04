@@ -78,7 +78,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 						{
 							if ( IsWin8OrNewer() ) // is the user running Windows 8 or newer?
 							{
-								char Win8Data[13] = "~ RUNASADMIN"; // set the data buffer to the proper string
+								const char Win8Data[13] = "~ RUNASADMIN"; // set the data buffer to the proper string
 								RegSetValueEx ( hKey, buf, 0, dwType, ( BYTE* ) Win8Data, sizeof (Win8Data) ); // set the value data to RUNASADMIN only
 								changed = true;
 								index--;
@@ -86,7 +86,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 							}
 							else // 7 or older
 							{
-								char XPData[11] = "RUNASADMIN"; // set the data buffer to the proper string
+								const char XPData[11] = "RUNASADMIN"; // set the data buffer to the proper string
 								RegSetValueEx ( hKey, buf, 0, dwType, ( BYTE* ) XPData, sizeof (XPData) ); // set the value data to RUNASADMIN only
 								changed = true;
 								index--;
@@ -176,23 +176,6 @@ bool IsVistaOrNewer ( void )
 	GetVersionEx ( &osvi );
 
 	if ( ( bIsVistaOrNewer = ( osvi.dwMajorVersion >= 6 ) ) != 0 )
-		return true;
-	else
-		return false;
-}
-
-// slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
-bool IsWin7 ( void )
-{
-	OSVERSIONINFO osvi;
-	bool bIsWin7OrNewer;
-
-	ZeroMemory ( &osvi, sizeof ( OSVERSIONINFO ) );
-	osvi.dwOSVersionInfoSize = sizeof ( OSVERSIONINFO );
-
-	GetVersionEx ( &osvi );
-
-	if ( ( bIsWin7OrNewer = ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1 ) ) != 0 )
 		return true;
 	else
 		return false;

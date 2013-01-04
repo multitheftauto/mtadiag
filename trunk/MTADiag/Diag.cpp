@@ -67,9 +67,8 @@ void Diag::Begin ( void )
 	if ( bQuit )
 	{
 		std::cout << "Your Grand Theft Auto installation is missing one or more files." << std::endl << "Please reinstall GTA and see if MTA works then." << std::endl;
-		Cleanup(); // clean up any temporary files that might have been created
-		Log::Close(); // close the log file for writing
-		remove ( files[0].c_str() ); // remove the MTADiag log
+		Cleanup ( true ); // clean up any temporary files that might have been created
+		system ( "pause" );
 		exit ( EXIT_FAILURE ); // exit
 	};
 
@@ -107,7 +106,7 @@ void Diag::Begin ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
-	Log::WriteFileToLog ( MTAPath + "\\MTA\\timings.log", "timings.log" );
+	Log::WriteFileToLog ( MTAPath + "\\timings.log", "timings.log" );
 	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
 	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
@@ -163,12 +162,18 @@ void Diag::Begin ( void )
 	}
 }
 
-void Diag::Cleanup ( void )
+void Diag::Cleanup ( bool deleteLog )
 {
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
 	for ( unsigned int i = 1; i < files.size() - 1; i++) // don't delete D3DX9_43.dll
 		remove ( files[i].c_str() );
+
+	if ( deleteLog )
+	{
+		Log::Close(); // close the log file for writing
+		remove ( files[0].c_str() ); // remove the MTADiag log
+	}
 }
 
 void Diag::GeneratePaths ( void )
@@ -338,11 +343,13 @@ void Diag::GeneratePaths ( void )
 	GTAFiles.push_back ( "\\data\\Decision\\Imran\\std1_is.ped" );
 	GTAFiles.push_back ( "\\data\\Decision\\Imran\\std2_is.ped" );
 
+	/*
 	GTAFiles.push_back ( "\\data\\Icons\\app.ico" );
 	GTAFiles.push_back ( "\\data\\Icons\\bin.ico" );
 	GTAFiles.push_back ( "\\data\\Icons\\saicon.ICN" );
 	GTAFiles.push_back ( "\\data\\Icons\\saicon2.ICN" );
 	GTAFiles.push_back ( "\\data\\Icons\\saicon3.ICN" );
+	*/
 
 	GTAFiles.push_back ( "\\data\\maps\\Audiozon.ipl" );
 	GTAFiles.push_back ( "\\data\\maps\\cull.ipl" );
@@ -636,16 +643,7 @@ void Diag::GeneratePaths ( void )
 	GTAFiles.push_back ( "\\models\\txd\\splash2.txd" );
 	GTAFiles.push_back ( "\\models\\txd\\splash3.txd" );
 
-	GTAFiles.push_back ( "\\movies\\GTAtitles.mpg" );
-	GTAFiles.push_back ( "\\movies\\Logo.mpg" );
-
-	GTAFiles.push_back ( "\\ReadMe\\Readme.txt" );
-
 	GTAFiles.push_back ( "\\text\\american.gxt" );
-	GTAFiles.push_back ( "\\text\\french.gxt" );
-	GTAFiles.push_back ( "\\text\\german.gxt" );
-	GTAFiles.push_back ( "\\text\\italian.gxt" );
-	GTAFiles.push_back ( "\\text\\spanish.gxt" );
 
 	// output contents of files vector
 #ifdef DEBUGOUTPUT
