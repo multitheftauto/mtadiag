@@ -16,6 +16,7 @@
 
 #include "Common.h"
 #include "md5.h"
+
 // Compatability mode registry key
 #define CompatModeRegKey "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 
@@ -25,6 +26,5 @@ bool                CheckForFile                       ( std::string FilePath );
 void                ConvertUnicodeToASCII              ( std::string file1, std::string file2 );
 bool                CopyToClipboard                    ( std::string contents );
 bool                IsVistaOrNewer                     ( void );
-bool                IsWin7                             ( void );
 bool                IsWin8OrNewer                      ( void );
 std::string         GetFileMD5                         ( std::string filename );
