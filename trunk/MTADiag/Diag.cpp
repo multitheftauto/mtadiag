@@ -72,23 +72,43 @@ void Diag::Begin ( void )
 		exit ( EXIT_FAILURE ); // exit
 	};
 
-	// update MTA to latest nightly/unstable build, depending on the major version
-	UpdateMTA();
+	// check if MTA version matches the latest auto-update nightly
+	if ( Curl::DownloadFile ( MTAVerURL, files[5].c_str() ) ) // download the version appropriation HTML
+	{
+		std::string MTAVersionTrim = MTAVersion; // copy the MTAVersion string
+		MTAVersionTrim.resize ( 15 ); // trim the MTAVersion string stored in registry to 15 characters; the version appropriation HTML has a 15 char string lacking two trailing zeros
+		if ( FindInFile ( files[5].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
+			std::cout << "MTA is up-to-date." << std::endl << std::endl; // we've found it, hooray, we don't need to update MTA
+		else
+			UpdateMTA(); // update MTA to latest nightly / unstable build, depending on MTA's major version
+	}
 
-	// write a bunch of information to the log file since we just collected it
+	// write some information to the log file
 	Log::WriteStringToLog ( "MTA path:             ", MTAPath );
+
+	if ( MTAUpdated ) // was MTA updated? if so, list the old and new versions
+	{
 	Log::WriteStringToLog ( "Old MTA version:      ", OriginalMTAVersion );
 	Log::WriteStringToLog ( "New MTA version:      ", MTAVersion );
+	}
+	else // list the current version of MTA
+	{
+		Log::WriteStringToLog ( "MTA version:          ", MTAVersion );
+	}
+
 	Log::WriteStringToLog ( "GTA path:             ", GTAPath );
 
+	// is D3D9 present in GTA:SA directory despite MTA:SA's own warning?
 	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "D3D9.dll present:     ", D3D9Present );
 
+	// is D3DX9_43.dll present? second check to ensure it was updated
 	std::string DirectXState = ( CheckForFile ( files[4] ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "DirectX up-to-date:   ", DirectXState );
 	if ( DXUpdated == 1 )
 		Log::WriteStringToLog ( "DirectX was updated:   Yes");
 
+	// was an erroneous compatibility mode setting removed?
 	if ( CompatRemoved1 == true || CompatRemoved2 == true )
 		Log::WriteStringToLog ( "Compat. mode deleted:  Yes");
 	Log::WriteStringToLog ( "" );
@@ -118,6 +138,7 @@ void Diag::Begin ( void )
 	GetDir ( GTAPath );
 	GetDir ( ( GTAPath + "\\models" ) );
 
+	// get relevant MD5sums
 	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
 	Log::WriteStringToLog ( "Value should be: 170b3a9108687b26da2d8901c6948a18 (HOODLUM 1.0)" );
 	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\models\\gta3.img" ) );
@@ -167,7 +188,7 @@ void Diag::Cleanup ( bool deleteLog )
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
 	for ( unsigned int i = 1; i < files.size() - 1; i++) // don't delete D3DX9_43.dll
-		remove ( files[i].c_str() );
+		remove ( files[i].c_str() ); // delete the file
 
 	if ( deleteLog )
 	{
@@ -179,14 +200,15 @@ void Diag::Cleanup ( bool deleteLog )
 void Diag::GeneratePaths ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
-	tempDir = getenv ( "Temp" );            // get the Temp directory
-	systemRoot = getenv ( "SystemRoot" );	// get the WINDOWS directory
-	programData = getenv ( "AllUsersProfile" ); // get the ProgramData directory 
-	IsWow64Process ( GetCurrentProcess(), &bIsWOW64 ); // is MTADiag running under WOW64?
-	GetLocalTime ( &sysTime );              // get the current system time
-	bQuit = false;                           // initialize quit bool, used in GTA files checking
+	tempDir = getenv ( "Temp" );                        // get the Temp directory
+	systemRoot = getenv ( "SystemRoot" );	            // get the WINDOWS directory
+	programData = getenv ( "AllUsersProfile" );         // get the ProgramData directory 
+	IsWow64Process ( GetCurrentProcess(), &bIsWOW64 );  // is MTADiag running under WOW64?
+	GetLocalTime ( &sysTime );                          // get the current system time
+	bQuit = false;                                      // initialize quit bool, used in GTA files checking
+	MTAUpdated = false;                                 // initialize MTAUpdated bool
 
-	// generate necessary file paths
+	// generate MTADiag log file path
 	std::stringstream ss;
 
 	ss << "MTADiag-Log-" << sysTime.wYear << "-" << sysTime.wMonth << "-" << sysTime.wDay << "_" << sysTime.wHour << "-" << sysTime.wMinute << "-" << sysTime.wSecond;
@@ -201,6 +223,7 @@ void Diag::GeneratePaths ( void )
 	files.push_back ( tempDir + "\\MTANightly.exe" ); // filepath for nightly
 	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as Unicode; we convert this file to ASCII for proper insertion & formatting in the log
 	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for the presence of this file to determine if DirectX is up to date
+	files.push_back ( tempDir + "\\ver.txt" ); // MTA's auto-update version appropriation
 
 	// fill the GTAFiles vector
 	GTAFiles.push_back ( "\\eax.dll" );
@@ -660,7 +683,7 @@ bool Diag::PollMTAVersions ( void )
 	MTAVersionsInstalled[4] = ReadRegKey ( MTAPathValue, MTA14PathSubKey ); // store MTA 1.4 path, if present
 	MTAVersionsInstalled[5] = ReadRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.5 path, if present
 
-	// if a version isn't installed, "Failed to get key." is returned by readRegKey; clear that array element
+	// if a version isn't installed, "Failed to get key." is returned by ReadRegKey; clear that array element
 	for ( int i = 1; i <= CUR_MTA_VERSIONS; i++ )
 	{
 		if ( !strcmp ( MTAVersionsInstalled[i].c_str(), "Failed to read key." ) )
@@ -838,7 +861,10 @@ void Diag::UpdateMTA ( void )
 		exit ( EXIT_SUCCESS );
 	}
 	else
+	{
 		std::cout << "MTA version is now: " << GetMTAVersion() << std::endl << std::endl; // tell the user the updated version string
+		MTAUpdated = true; // bool to control log file output of old and new MTA versions
+	}
 }
 
 void Diag::UpdateDirectX ( void )
