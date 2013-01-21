@@ -45,6 +45,8 @@
 #define MTA14NightlyURL "http://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 #define MTA15NightlyURL "http://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
 
+#define MTAVerURL "http://nightly.mtasa.com/ver/"
+
 namespace Diag {
 
 	void                    Begin                       ( void );
@@ -91,6 +93,7 @@ namespace Diag {
 	static std::string      MTAVersion;
 	static std::string      MTAShortVersion;
 	static std::string      OriginalMTAVersion;
+	static bool             MTAUpdated;
 
 	static std::string      MTAVersionsInstalled[CUR_MTA_VERSIONS]; // array to store paths of all MTA versions currently installed
 	static int              MTAVerChoice;                           // stores user's choice of which MTA version to diagnose

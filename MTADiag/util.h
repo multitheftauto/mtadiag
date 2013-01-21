@@ -28,3 +28,4 @@ bool                CopyToClipboard                    ( std::string contents );
 bool                IsVistaOrNewer                     ( void );
 bool                IsWin8OrNewer                      ( void );
 std::string         GetFileMD5                         ( std::string filename );
+bool                FindInFile                         ( std::string filename, std::string value );

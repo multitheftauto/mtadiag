@@ -239,3 +239,23 @@ std::string GetFileMD5 ( std::string filename )
 
 	return md5sum;
 }
+
+bool FindInFile ( std::string filename, std::string value )
+{
+	std::ifstream file;
+	file.open ( filename.c_str(), std::ios::in );
+	std::string line;
+
+	while ( file.good() ) // is the file good for reading still?
+	{
+		getline ( file, line );
+		size_t found;
+
+		found = line.find ( value ); // look for our value on each line
+		if ( found != std::string::npos ) { return true; } // return true if value found
+	}
+
+	file.close(); // close the file
+
+	return false; // we didn't find it, return false
+}
