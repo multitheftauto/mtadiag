@@ -73,11 +73,11 @@ void Diag::Begin ( void )
 	};
 
 	// check if MTA version matches the latest auto-update nightly
-	if ( Curl::DownloadFile ( MTAVerURL, files[5].c_str() ) ) // download the version appropriation HTML
+	if ( Curl::DownloadFile ( MTAVerURL, files[1].c_str() ) ) // download the version appropriation HTML
 	{
 		std::string MTAVersionTrim = MTAVersion; // copy the MTAVersion string
 		MTAVersionTrim.resize ( 15 ); // trim the MTAVersion string stored in registry to 15 characters; the version appropriation HTML has a 15 char string lacking two trailing zeros
-		if ( FindInFile ( files[5].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
+		if ( FindInFile ( files[1].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
 			std::cout << "MTA is up-to-date." << std::endl << std::endl; // we've found it, hooray, we don't need to update MTA
 		else
 			UpdateMTA(); // update MTA to latest nightly / unstable build, depending on MTA's major version
@@ -127,6 +127,7 @@ void Diag::Begin ( void )
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\timings.log", "timings.log" );
+	Log::WriteFileToLog ( MTAPath + "\\mods\\deathmatch\\resources\\benchmark\\output\\bench.log", "bench.log" );
 	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
 	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
@@ -223,7 +224,6 @@ void Diag::GeneratePaths ( void )
 	files.push_back ( tempDir + "\\MTANightly.exe" ); // filepath for nightly
 	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as Unicode; we convert this file to ASCII for proper insertion & formatting in the log
 	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for the presence of this file to determine if DirectX is up to date
-	files.push_back ( tempDir + "\\ver.txt" ); // MTA's auto-update version appropriation
 
 	// fill the GTAFiles vector
 	GTAFiles.push_back ( "\\eax.dll" );

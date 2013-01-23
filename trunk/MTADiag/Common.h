@@ -22,4 +22,4 @@
 #include <vector>
 #include "Log.h"
 
-#define VERSION "2.7"
+#define VERSION "2.7.1"
