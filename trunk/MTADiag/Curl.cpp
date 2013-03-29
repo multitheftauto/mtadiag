@@ -29,6 +29,7 @@ bool Curl::DownloadFile ( std::string fileURL, std::string filePath )
 	{
 		FILE *fp; // file pointer
 		fopen_s ( &fp, filePath.c_str(), "wb" ); // open the temporary file download location
+		curl_easy_setopt ( curl, CURLOPT_SSL_VERIFYPEER, FALSE ); // used for https
 		curl_easy_setopt ( curl, CURLOPT_URL, fileURL.c_str() ); // set the URL
 		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, fwrite ); // set the write function
 		curl_easy_setopt ( curl, CURLOPT_WRITEDATA, fp ); // set the file path
@@ -75,7 +76,7 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 		<< curl_easy_escape ( curl, pasteName.c_str(), pasteName.length() ) // urlencode MTADiag log filename
 		<< "&"
 		<< "api_paste_expire_date=1M&" // paste will expire in one month
-		<< "api_dev_key=use_your_own&" // Pastebin API dev key
+		<< "api_dev_key=provide_your_own&" // Pastebin API dev key
 		<< "api_paste_code="
 		<< curl_easy_escape ( curl, logText.c_str(), logText.length() ); // urlencode log file contents
 	post = ss.str();

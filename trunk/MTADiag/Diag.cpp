@@ -41,8 +41,6 @@ void Diag::Begin ( void )
 	std::cout << "GTA install path: " << GetGamePath() << std::endl;
 	std::cout << std::endl;
 
-	OriginalMTAVersion = GetMTAVersion(); // store the original version to dump in the log file later on
-
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
 	if ( CheckForFile ( files[4].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
@@ -51,23 +49,29 @@ void Diag::Begin ( void )
 
 	// check HKCU first
 	CompatRemoved1 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_CURRENT_USER );
-	// check HKLM for compat. mode settings set for all users
-	// only check 32-bit OSes due to compat. mode settings *NOT* being written to Wow6432Node on 64-bit OSes, and I can't seem to query non-Wow6432Node keys
+	// check HKLM for compatibility mode settings set for all users
+	// only check 32-bit OSes due to compatibility mode settings *NOT* being written to Wow6432Node on 64-bit OSes
+	// and I can't seem to query non-Wow6432Node keys - maybe I'm doing something wrong?
 	if ( !bIsWOW64 ) { CompatRemoved2 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_LOCAL_MACHINE ); }
 
-	// check for any missing GTA files
-	for ( unsigned int i = 0; i < GTAFiles.size(); i++ )
-	{
-		if ( !( CheckForFile ( ( GTAPath + GTAFiles[i].c_str() ) ) ) )
-		{
-			std::cout << "Missing GTA file: " << GTAFiles[i] << std::endl; // output any missing file
-			bQuit = true; // we need to quit since the user's GTA install is probably screwed up
-		}
-	}
+	// check for any modified or nonstandard GTA files
+	std::cout << "Checking GTA files, please wait..." << std::endl;
+
+	for ( unsigned int i = 0; i < ( sizeof ( fileList ) / sizeof ( fileList[0] ) ); i++ )
+    {
+			std::string szMd5 = fileList[i].szMd5;
+            std::string szFilename = fileList[i].szFilename;
+
+			if ( !( CompareFileMD5 ( szMd5, ( GTAPath + szFilename ) ) ) )
+			{
+				std::cout << "Nonstandard GTA file: " << fileList[i].szFilename << std::endl; // output any messed up file file
+				bQuit = true; // we need to quit since the user's GTA install is probably screwed up
+			}
+    }
 	if ( bQuit )
 	{
-		std::cout << "Your Grand Theft Auto installation is missing one or more files." << std::endl << "Please reinstall GTA and see if MTA works then." << std::endl;
-		Cleanup ( true ); // clean up any temporary files that might have been created
+		std::cout << "Your Grand Theft Auto installation is unclean." << std::endl << "Please reinstall GTA and see if MTA works then." << std::endl;
+		Cleanup ( true ); // clean up any temporary files that might have been created, along with the MTADiag log
 		system ( "pause" );
 		exit ( EXIT_FAILURE ); // exit
 	};
@@ -76,11 +80,15 @@ void Diag::Begin ( void )
 	if ( Curl::DownloadFile ( MTAVerURL, files[1].c_str() ) ) // download the version appropriation HTML
 	{
 		std::string MTAVersionTrim = MTAVersion; // copy the MTAVersion string
-		MTAVersionTrim.resize ( 15 ); // trim the MTAVersion string stored in registry to 15 characters; the version appropriation HTML has a 15 char string lacking two trailing zeros
+		MTAVersionTrim.resize ( 15 ); // trim the MTAVersion string stored in registry to 15 characters
+		                              // the version appropriation HTML has a 15 char string lacking two trailing zeros
 		if ( FindInFile ( files[1].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
 			std::cout << "MTA is up-to-date." << std::endl << std::endl; // we've found it, hooray, we don't need to update MTA
 		else
+		{
+			OriginalMTAVersion = GetMTAVersion(); // store the original version to dump in the log file later on
 			UpdateMTA(); // update MTA to latest nightly / unstable build, depending on MTA's major version
+		}
 	}
 
 	// write some information to the log file
@@ -88,8 +96,8 @@ void Diag::Begin ( void )
 
 	if ( MTAUpdated ) // was MTA updated? if so, list the old and new versions
 	{
-	Log::WriteStringToLog ( "Old MTA version:      ", OriginalMTAVersion );
-	Log::WriteStringToLog ( "New MTA version:      ", MTAVersion );
+		Log::WriteStringToLog ( "Old MTA version:      ", OriginalMTAVersion );
+		Log::WriteStringToLog ( "New MTA version:      ", MTAVersion );
 	}
 	else // list the current version of MTA
 	{
@@ -102,7 +110,7 @@ void Diag::Begin ( void )
 	std::string D3D9Present = ( CheckForFile ( GTAPath + "\\D3D9.dll" ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "D3D9.dll present:     ", D3D9Present );
 
-	// is D3DX9_43.dll present? second check to ensure it was updated
+	// is DirectX up-to-date? (D3DX9_43.dll present)
 	std::string DirectXState = ( CheckForFile ( files[4] ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "DirectX up-to-date:   ", DirectXState );
 	if ( DXUpdated == 1 )
@@ -114,30 +122,37 @@ void Diag::Begin ( void )
 	Log::WriteStringToLog ( "" );
 
 	// collect more information and output to log file
-	std::cout << "Gathering information. Please wait..." << std::endl << std::endl;
+	std::cout << "Gathering information. Please wait..." << std::endl;
+	ProgressBar ( 0 );
 
 	// gather the most useful system information first
 #ifndef SKIPDXDIAG
 	DoSystemCommandWithOutput ( "dxdiag /t " );
+	ProgressBar ( 10 );
 #endif
 	DoSystemCommandWithOutput ( "tasklist >" );
+	ProgressBar ( 20 );
 
 	// write some of MTA's logs to our log
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\timings.log", "timings.log" );
-	Log::WriteFileToLog ( MTAPath + "\\mods\\deathmatch\\resources\\benchmark\\output\\bench.log", "bench.log" );
+	Log::WriteFileToLog ( MTAPath + "\\mods\\deathmatch\\resources\\benchmark\\output\\bench.log", "bench.log" ); // FPS benchmark log
 	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
 
+	ProgressBar ( 40 );
+
 	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
-	DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" ); // might help resolve Visual C++ runtime issues
+	if ( IsVistaOrNewer() ) { DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" ); } // might help resolve Visual C++ runtime issues
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" ); // get some video controller information
 
 	// get directory listing of some folders
 	GetDir ( ( MTAPath + "\\MTA" ) );
 	GetDir ( GTAPath );
 	GetDir ( ( GTAPath + "\\models" ) );
+
+	ProgressBar ( 60 );
 
 	// get relevant MD5sums
 	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
@@ -146,12 +161,16 @@ void Diag::Begin ( void )
 	Log::WriteStringToLog ( "Value should be: 9282e0df8d7eee3c4a49b44758dd694d" );
 	Log::WriteStringToLog ( "" );
 
+	ProgressBar ( 80 );
+
 	// font diagnostics
 	Log::WriteStringToLog ( "Verdana (TrueType) registry value:", ReadRegKey ( "Verdana (TrueType)", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" ) );
 	Log::WriteStringToLog ( GetFileMD5 ( systemRoot + "\\Fonts\\verdana.ttf" ) );
 	Log::WriteStringToLog ( "Value should be: ba34b303291e36596759eb46ad9c51f2 (Win 8) / 6eee3713d2330d93183846f2d34f0976 (Win 7)" );
 	Log::WriteStringToLog ( "" );
 	GetDir ( systemRoot + "\\Fonts\\verd*" );
+
+	ProgressBar ( 100 ); std::cout << std::endl << std::endl;
 
 	// close the log file for writing
 	Log::Close();
@@ -174,7 +193,7 @@ void Diag::Begin ( void )
 			std::cout << PasteBinResult << std::endl;
 		}
 	}
-	else // upload failure
+	else // upload failure, open the log in WordPad so the user can copy & paste it themselves
 	{
 		std::cout << std::endl << std::endl << "Failed to upload log file to Pastebin." << std::endl;
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
@@ -188,10 +207,10 @@ void Diag::Cleanup ( bool deleteLog )
 {
 	// clean up after ourselves
 	// start at 1 since 0 is the generated log's path; we still need that
-	for ( unsigned int i = 1; i < files.size() - 1; i++) // don't delete D3DX9_43.dll
+	for ( unsigned int i = 1; i < files.size() - 1; i++) // don't delete D3DX9_43.dll (this file must always be last in the vector)
 		remove ( files[i].c_str() ); // delete the file
 
-	if ( deleteLog )
+	if ( deleteLog ) // do we need to delete our log? (if MTADiag quit prior to completing diagnostics)
 	{
 		Log::Close(); // close the log file for writing
 		remove ( files[0].c_str() ); // remove the MTADiag log
@@ -221,452 +240,9 @@ void Diag::GeneratePaths ( void )
 
 	files.push_back ( tempDir + "\\" + logFileName + ".txt" ); // files [0] ... / log file path
 	files.push_back ( tempDir + "\\tempoutput.txt" ); // general temporary output file for almost everything
-	files.push_back ( tempDir + "\\MTANightly.exe" ); // filepath for nightly
+	files.push_back ( tempDir + "\\MTANightly.exe" ); // filepath for nightly installer
 	files.push_back ( tempDir + "\\WMICUni.txt" ); // WMIC command outputs as Unicode; we convert this file to ASCII for proper insertion & formatting in the log
-	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for the presence of this file to determine if DirectX is up to date
-
-	// fill the GTAFiles vector
-	GTAFiles.push_back ( "\\eax.dll" );
-	GTAFiles.push_back ( "\\ogg.dll" );
-	GTAFiles.push_back ( "\\stream.ini" );
-	GTAFiles.push_back ( "\\vorbis.dll" );
-	GTAFiles.push_back ( "\\vorbisFile.dll" );
-
-	GTAFiles.push_back ( "\\anim\\anim.img" );
-	GTAFiles.push_back ( "\\anim\\cuts.img" );
-	GTAFiles.push_back ( "\\anim\\ped.ifp" );
-
-	GTAFiles.push_back ( "\\audio\\CONFIG\\AudioEventHistory.txt" );
-	GTAFiles.push_back ( "\\audio\\CONFIG\\BankLkup.dat" );
-	GTAFiles.push_back ( "\\audio\\CONFIG\\BankSlot.dat" );
-	GTAFiles.push_back ( "\\audio\\CONFIG\\EventVol.dat" );
-	GTAFiles.push_back ( "\\audio\\CONFIG\\PakFiles.dat" );
-	GTAFiles.push_back ( "\\audio\\CONFIG\\StrmPaks.dat" );
-	GTAFiles.push_back ( "\\audio\\CONFIG\\TrakLkup.dat" );
-
-	GTAFiles.push_back ( "\\audio\\SFX\\FEET" );
-	GTAFiles.push_back ( "\\audio\\SFX\\GENRL" );
-	GTAFiles.push_back ( "\\audio\\SFX\\PAIN_A" );
-	GTAFiles.push_back ( "\\audio\\SFX\\SCRIPT" );
-	GTAFiles.push_back ( "\\audio\\SFX\\SPC_EA" );
-	GTAFiles.push_back ( "\\audio\\SFX\\SPC_FA" );
-	GTAFiles.push_back ( "\\audio\\SFX\\SPC_GA" );
-	GTAFiles.push_back ( "\\audio\\SFX\\SPC_NA" );
-	GTAFiles.push_back ( "\\audio\\SFX\\SPC_PA" );
-
-	GTAFiles.push_back ( "\\audio\\streams\\AA" );
-	GTAFiles.push_back ( "\\audio\\streams\\ADVERTS" );
-	GTAFiles.push_back ( "\\audio\\streams\\AMBIENCE" );
-	GTAFiles.push_back ( "\\audio\\streams\\BEATS" );
-	GTAFiles.push_back ( "\\audio\\streams\\CH" );
-	GTAFiles.push_back ( "\\audio\\streams\\CO" );
-	GTAFiles.push_back ( "\\audio\\streams\\CR" );
-	GTAFiles.push_back ( "\\audio\\streams\\CUTSCENE" );
-	GTAFiles.push_back ( "\\audio\\streams\\DS" );
-	GTAFiles.push_back ( "\\audio\\streams\\HC" );
-	GTAFiles.push_back ( "\\audio\\streams\\MH" );
-	GTAFiles.push_back ( "\\audio\\streams\\MR" );
-	GTAFiles.push_back ( "\\audio\\streams\\NJ" );
-	GTAFiles.push_back ( "\\audio\\streams\\RE" );
-	GTAFiles.push_back ( "\\audio\\streams\\RG" );
-	GTAFiles.push_back ( "\\audio\\streams\\TK" );
-
-	GTAFiles.push_back ( "\\data\\animgrp.dat" );
-	GTAFiles.push_back ( "\\data\\animviewer.dat" );
-	GTAFiles.push_back ( "\\data\\ar_stats.dat" );
-	GTAFiles.push_back ( "\\data\\AudioEvents.txt" );
-	GTAFiles.push_back ( "\\data\\carcols.dat" );
-	GTAFiles.push_back ( "\\data\\cargrp.dat" );
-	GTAFiles.push_back ( "\\data\\carmods.dat" );
-	GTAFiles.push_back ( "\\data\\clothes.dat" );
-	GTAFiles.push_back ( "\\data\\default.dat" );
-	GTAFiles.push_back ( "\\data\\default.ide" );
-	GTAFiles.push_back ( "\\data\\fonts.dat" );
-	GTAFiles.push_back ( "\\data\\furnitur.dat" );
-	GTAFiles.push_back ( "\\data\\gridref.dat" );
-	GTAFiles.push_back ( "\\data\\gta.dat" );
-	GTAFiles.push_back ( "\\data\\gta_quick.dat" );
-	GTAFiles.push_back ( "\\data\\handling.cfg" );
-	GTAFiles.push_back ( "\\data\\info.zon" );
-	GTAFiles.push_back ( "\\data\\main.sc" );
-	GTAFiles.push_back ( "\\data\\map.zon" );
-	GTAFiles.push_back ( "\\data\\melee.dat" );
-	GTAFiles.push_back ( "\\data\\numplate.dat" );
-	GTAFiles.push_back ( "\\data\\object.dat" );
-	GTAFiles.push_back ( "\\data\\ped.dat" );
-	GTAFiles.push_back ( "\\data\\pedgrp.dat" );
-	GTAFiles.push_back ( "\\data\\peds.ide" );
-	GTAFiles.push_back ( "\\data\\pedstats.dat" );
-	GTAFiles.push_back ( "\\data\\plants.dat" );
-	GTAFiles.push_back ( "\\data\\polydensity.dat" );
-	GTAFiles.push_back ( "\\data\\popcycle.dat" );
-	GTAFiles.push_back ( "\\data\\procobj.dat" );
-	GTAFiles.push_back ( "\\data\\shopping.dat" );
-	GTAFiles.push_back ( "\\data\\statdisp.dat" );
-	GTAFiles.push_back ( "\\data\\surface.dat" );
-	GTAFiles.push_back ( "\\data\\surfaud.dat" );
-	GTAFiles.push_back ( "\\data\\surfinfo.dat" );
-	GTAFiles.push_back ( "\\data\\timecyc.dat" );
-	GTAFiles.push_back ( "\\data\\timecycp.dat" );
-	GTAFiles.push_back ( "\\data\\txdcut.ide" );
-	GTAFiles.push_back ( "\\data\\vehicles.ide" );
-	GTAFiles.push_back ( "\\data\\water.dat" );
-	GTAFiles.push_back ( "\\data\\water1.dat" );
-	GTAFiles.push_back ( "\\data\\weapon.dat" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\BLANK.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Cop.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\FLAT.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\GangMbr.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\GROVE.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Indoors.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\MISSION.grp" );
-	GTAFiles.push_back ( "\\data\\Decision\\MISSION.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\m_empty.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\m_infrm.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\m_norm.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\m_std.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\m_tough.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\m_weak.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\PedEvent.txt" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\Cop.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\Fireman.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\GangMbr.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\Indoors.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\MISSION.grp" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\m_empty.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\m_norm.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\m_plyr.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\m_steal.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\m_tough.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\m_weak.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\RANDOM.grp" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\RANDOM.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\RANDOM2.grp" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\R_Norm.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\R_Tough.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Allowed\\R_Weak.ped" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\andyd\\ADgrp.grp" );
-	GTAFiles.push_back ( "\\data\\Decision\\andyd\\ADtemp.ped" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\chris\\maf5.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\chris\\ryder3.ped" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\ChrisM\\CMblnk.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\ChrisM\\m_std_cm.ped" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\Craig\\crack1.ped" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\david\\dam_sec.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\david\\hei2_sc.ped" );
-
-	GTAFiles.push_back ( "\\data\\Decision\\Imran\\sci1_is.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Imran\\std1_is.ped" );
-	GTAFiles.push_back ( "\\data\\Decision\\Imran\\std2_is.ped" );
-
-	/*
-	GTAFiles.push_back ( "\\data\\Icons\\app.ico" );
-	GTAFiles.push_back ( "\\data\\Icons\\bin.ico" );
-	GTAFiles.push_back ( "\\data\\Icons\\saicon.ICN" );
-	GTAFiles.push_back ( "\\data\\Icons\\saicon2.ICN" );
-	GTAFiles.push_back ( "\\data\\Icons\\saicon3.ICN" );
-	*/
-
-	GTAFiles.push_back ( "\\data\\maps\\Audiozon.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\cull.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\occlu.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\occluint.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\occluLA.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\occlusf.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\occluveg.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\paths.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\paths2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\paths3.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\paths4.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\paths5.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\tunnels.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\txd.ide" );
-
-	GTAFiles.push_back ( "\\data\\maps\\country\\countn2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countn2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countrye.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countrye.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countryN.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countryN.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countryS.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countryS.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countryW.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\countryw.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\country\\counxref.ide" );
-
-	GTAFiles.push_back ( "\\data\\maps\\generic\\barriers.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\generic\\dynamic.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\generic\\dynamic2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\generic\\multiobj.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\generic\\procobj.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\generic\\vegepart.ide" );
-
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int1.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int1.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int3.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int3.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int4.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int4.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int5.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_int5.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_intb.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\gen_intb.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_cont.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_cont.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_LA.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_LA.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_SF.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_SF.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_veg.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\int_veg.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\propext.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\props.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\props2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\savehous.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\savehous.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\stadint.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\interior\\stadint.ipl" );
-
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAe.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAe.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAe2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAe2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAhills.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAhills.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAn.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAn.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAn2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAn2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAs.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAs.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAs2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAs2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAw.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAw.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAw2.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAw2.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LaWn.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LaWn.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\LA\\LAxref.ide" );
-
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\leveldes.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\leveldes.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\levelmap.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\levelmap.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\levelxre.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\seabed.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\leveldes\\seabed.ipl" );
-
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFe.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFe.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFn.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFn.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFs.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFs.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFSe.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFSe.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFw.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFw.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\SF\\SFxref.ide" );
-
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegasE.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegasE.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegasN.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegasN.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\VegasS.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegasS.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\VegasW.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegasW.ipl" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegaxref.ide" );
-	GTAFiles.push_back ( "\\data\\maps\\vegas\\vegaxref.ipl" );
-
-	GTAFiles.push_back ( "\\data\\maps\\veh_mods\\veh_mods.ide" );
-
-	GTAFiles.push_back ( "\\data\\Paths\\carrec.img" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES0.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES1.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES10.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES11.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES12.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES13.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES14.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES15.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES16.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES17.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES18.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES19.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES2.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES20.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES21.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES22.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES23.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES24.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES25.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES26.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES27.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES28.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES29.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES3.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES30.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES31.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES32.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES33.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES34.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES35.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES36.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES37.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES38.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES39.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES4.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES40.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES41.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES42.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES43.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES44.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES45.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES46.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES47.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES48.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES49.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES5.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES50.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES51.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES52.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES53.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES54.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES55.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES56.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES57.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES58.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES59.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES6.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES60.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES61.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES62.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES63.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES7.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES8.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\NODES9.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\ROADBLOX.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\spath0.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\tracks.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\tracks2.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\tracks3.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\tracks4.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\train.DAT" );
-	GTAFiles.push_back ( "\\data\\Paths\\train2.DAT" );
-
-	GTAFiles.push_back ( "\\data\\script\\main.scm" );
-	GTAFiles.push_back ( "\\data\\script\\SCRIPT.IMG" );
-
-	GTAFiles.push_back ( "\\models\\cutscene.img" );
-	GTAFiles.push_back ( "\\models\\effects.fxp" );
-	GTAFiles.push_back ( "\\models\\effectsPC.txd" );
-	GTAFiles.push_back ( "\\models\\fonts.txd" );
-	GTAFiles.push_back ( "\\models\\fronten1.txd" );
-	GTAFiles.push_back ( "\\models\\fronten2.txd" );
-	GTAFiles.push_back ( "\\models\\fronten3.txd" );
-	GTAFiles.push_back ( "\\models\\fronten_pc.txd" );
-	GTAFiles.push_back ( "\\models\\gta3.img" );
-	GTAFiles.push_back ( "\\models\\gta_int.img" );
-	GTAFiles.push_back ( "\\models\\hud.txd" );
-	GTAFiles.push_back ( "\\models\\misc.txd" );
-	GTAFiles.push_back ( "\\models\\particle.txd" );
-	GTAFiles.push_back ( "\\models\\pcbtns.txd" );
-	GTAFiles.push_back ( "\\models\\player.img" );
-
-	GTAFiles.push_back ( "\\models\\coll\\peds.col" );
-	GTAFiles.push_back ( "\\models\\coll\\vehicles.col" );
-	GTAFiles.push_back ( "\\models\\coll\\weapons.col" );
-
-	GTAFiles.push_back ( "\\models\\generic\\air_vlo.DFF" );
-	GTAFiles.push_back ( "\\models\\generic\\arrow.DFF" );
-	GTAFiles.push_back ( "\\models\\generic\\hoop.dff" );
-	GTAFiles.push_back ( "\\models\\generic\\vehicle.txd" );
-	GTAFiles.push_back ( "\\models\\generic\\wheels.DFF" );
-	GTAFiles.push_back ( "\\models\\generic\\wheels.txd" );
-	GTAFiles.push_back ( "\\models\\generic\\zonecylb.DFF" );
-
-	GTAFiles.push_back ( "\\models\\grass\\grass0_1.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass0_2.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass0_3.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass0_4.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass1_1.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass1_2.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass1_3.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass1_4.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass2_1.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass2_2.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass2_3.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass2_4.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass3_1.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass3_2.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass3_3.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\grass3_4.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\plant1.dff" );
-	GTAFiles.push_back ( "\\models\\grass\\plant1.txd" );
-
-	GTAFiles.push_back ( "\\models\\txd\\intro1.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\intro2.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\INTRO3.TXD" );
-	GTAFiles.push_back ( "\\models\\txd\\intro4.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_BEAT.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_BUM.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_CARD.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_CHAT.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_DRV.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_DUAL.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\ld_grav.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_NONE.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_OTB.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_OTB2.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_PLAN.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_POKE.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_POOL.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_RACE.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_RCE1.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_RCE2.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_RCE3.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_RCE4.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_RCE5.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_ROUL.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\ld_shtr.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_SLOT.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_SPAC.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LD_TATT.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\load0uk.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc0.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc1.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc10.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc11.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc12.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc13.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc14.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc2.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc3.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc4.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc5.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc6.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc7.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc8.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\loadsc9.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LOADSCS.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\LOADSUK.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\outro.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\splash1.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\splash2.txd" );
-	GTAFiles.push_back ( "\\models\\txd\\splash3.txd" );
-
-	GTAFiles.push_back ( "\\text\\american.gxt" );
+	files.push_back ( systemRoot + "\\system32\\D3DX9_43.dll" ); // we check for the presence of this file to determine if DirectX is up to date (this file must always be last in the vector)
 
 	// output contents of files vector
 #ifdef DEBUGOUTPUT
@@ -720,7 +296,7 @@ bool Diag::PollMTAVersions ( void )
 
 void Diag::UserPickVersion ( void )
 {
-	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to update and diagnose:" << std::endl;
+	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to diagnose:" << std::endl;
 
 	// iterate through currently installed MTA versions and output them
 	for (int i = 1; i < CUR_MTA_VERSIONS; i++)
@@ -800,7 +376,7 @@ std::string Diag::GetMTAVersion ( void )
 	return "Unable to read MTA version.";
 }
 
-std::string Diag::GetGamePath( void )
+std::string Diag::GetGamePath ( void )
 {
 	GTAPath = ReadRegKey ( MTAGTAPathValue, MTAGTAPathSubKey );
 	return GTAPath;
@@ -843,7 +419,7 @@ void Diag::UpdateMTA ( void )
 	else // if the download failed, open a browser window to start the download of the nightly
 	{
 		std::cout << "Unable to automatically download MTA patch. Launching download link..." << std::endl;
-		system ("pause"); // wait for user acknowledgement
+		system ( "pause" ); // wait for user acknowledgement
 		ShellExecute ( NULL, "open", url.c_str(), NULL, NULL, SW_HIDE );
 		std::cout << std::endl << "Install the patch. ";
 	}
@@ -855,8 +431,7 @@ void Diag::UpdateMTA ( void )
 	if ( works == 'y' )
 	{
 		std::cout << "Enjoy playing MTA!" << std::endl;
-		Cleanup(); // delete any temporary files
-		remove ( Diag::files[0].c_str() ); // remove the generated MTADiag log
+		Cleanup ( true ); // delete any temporary files and the MTADiag log
 		system ( "pause" ); // wait for user acknowledgement
 		exit ( EXIT_SUCCESS );
 	}
@@ -891,14 +466,14 @@ void Diag::UpdateDirectX ( void )
 		std::cout << "Continue when DirectX has finished updating." << std::endl;
 		system ( "pause" ); // wait for user acknowledgement
 	}
-	remove( DXWebSetupPath.c_str() ); // delete the temporary file
+	remove ( DXWebSetupPath.c_str() ); // delete the temporary file
 }
 
 void Diag::DoSystemCommandWithOutput ( std::string command )
 {
 	system ( ( command + files[1] ).c_str() ); // do the command
 
-	Log::WriteFileToLog ( files[1], command ); // write the result to the log file with the command as a description
+	Log::WriteFileToLog ( files[1], command ); // write the result to the log file with the passed command argument as a description
 }
 
 void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )

@@ -20,6 +20,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <shlobj.h>
 #include "Log.h"
 
-#define VERSION "2.7.1"
+#define VERSION "2.7.3"
