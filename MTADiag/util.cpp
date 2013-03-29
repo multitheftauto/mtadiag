@@ -164,7 +164,7 @@ bool CopyToClipboard ( std::string contents )
 		return false; // failure
 }
 
-// slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
+// slightly modified version of https://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
 bool IsVistaOrNewer ( void )
 {
 	OSVERSIONINFO osvi;
@@ -181,7 +181,7 @@ bool IsVistaOrNewer ( void )
 		return false;
 }
 
-// slightly modified version of http://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
+// slightly modified version of https://msdn.microsoft.com/en-us/library/ms724451%28VS.85%29.aspx
 bool IsWin8OrNewer ( void )
 {
 	OSVERSIONINFO osvi;
@@ -240,6 +240,51 @@ std::string GetFileMD5 ( std::string filename )
 	return md5sum;
 }
 
+bool CompareFileMD5 ( std::string MD5sum, std::string filename )
+{
+	FILE *fp; // file pointer
+
+	fopen_s ( &fp, filename.c_str(), "rb" ); // try to open the file
+
+	if ( fp == NULL ) // we can't open it
+	{
+		return ( false );
+	}
+
+	MD5 md5; // initialize MD5
+
+	std::string md5sum; // string to store md5sum
+
+	unsigned char buffer[4096]; // file buffer
+
+	// read all bytes throughout the file
+	while ( !feof ( fp ) )
+	{
+		unsigned int read = fread ( buffer, 1, 4096, fp );
+
+		// update the MD5 with what we just read
+		md5.update ( buffer, read );
+	}
+
+	md5.finalize(); // create a digest from the MD5 result
+
+	fclose ( fp ); // close the file
+
+	std::stringstream ss; // create a stringstream
+
+	ss << md5;
+	md5sum = ss.str(); // put the md5sum into a string
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	if ( md5sum == MD5sum ) // compare the file's actual MD5sum to the passed MD5sum
+		return true; // return true if they're the same
+	else
+		return false; // return false if they're different
+}
+
 bool FindInFile ( std::string filename, std::string value )
 {
 	std::ifstream file;
@@ -258,4 +303,26 @@ bool FindInFile ( std::string filename, std::string value )
 	file.close(); // close the file
 
 	return false; // we didn't find it, return false
+}
+
+void ProgressBar ( int percent )
+{
+	std::string bar;
+
+	for ( int i = 0; i < 50; i++ )
+	{
+		if ( i < ( percent / 2 ) )
+		{
+			bar.replace ( i, 1, "=" );
+		}
+		else if ( i == ( percent / 2 ) )
+		{
+			bar.replace ( i, 1, ">" );
+		}
+		else
+		{
+			bar.replace ( i, 1, " " );
+		}
+	}
+	std::cout << "\r" "[" << bar << "] "; std::cout.width ( 3 ); std::cout << percent << "%     " << std::flush;
 }
