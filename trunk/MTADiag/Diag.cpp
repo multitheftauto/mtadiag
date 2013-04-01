@@ -54,23 +54,26 @@ void Diag::Begin ( void )
 	// and I can't seem to query non-Wow6432Node keys - maybe I'm doing something wrong?
 	if ( !bIsWOW64 ) { CompatRemoved2 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_LOCAL_MACHINE ); }
 
-	// check for any modified or nonstandard GTA files
-	std::cout << "Checking GTA files, please wait..." << std::endl;
+	// check for any missing GTA files
+	std::cout << "Checking for missing GTA files, please wait..." << std::endl;
 
 	for ( unsigned int i = 0; i < ( sizeof ( fileList ) / sizeof ( fileList[0] ) ); i++ )
     {
-			std::string szMd5 = fileList[i].szMd5;
             std::string szFilename = fileList[i].szFilename;
 
-			if ( !( CompareFileMD5 ( szMd5, ( GTAPath + szFilename ) ) ) )
+			if ( !( CheckForFile ( GTAPath + szFilename ) ) )
 			{
-				std::cout << "Nonstandard GTA file: " << fileList[i].szFilename << std::endl; // output any messed up file file
+				std::cout << "Missing GTA file: " << fileList[i].szFilename << std::endl; // output any messed up file
 				bQuit = true; // we need to quit since the user's GTA install is probably screwed up
 			}
+			std::cout << szFilename << std::endl;
+			printf ( "Checking %i out of %i...\r", i, ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) );
+			fflush ( stdout );
     }
+	std::cout << std::endl;
 	if ( bQuit )
 	{
-		std::cout << "Your Grand Theft Auto installation is unclean." << std::endl << "Please reinstall GTA and see if MTA works then." << std::endl;
+		std::cout << "Your Grand Theft Auto installation is missing one or more files." << std::endl << "Please reinstall GTA and see if MTA works then." << std::endl;
 		Cleanup ( true ); // clean up any temporary files that might have been created, along with the MTADiag log
 		system ( "pause" );
 		exit ( EXIT_FAILURE ); // exit
@@ -121,6 +124,25 @@ void Diag::Begin ( void )
 		Log::WriteStringToLog ( "Compat. mode deleted:  Yes");
 	Log::WriteStringToLog ( "" );
 
+	// check for any modified or nonstandard GTA files
+	for ( unsigned int i = 0; i < ( sizeof ( fileList ) / sizeof ( fileList[0] ) ); i++ )
+    {
+			std::string szMd5 = fileList[i].szMd5;
+            std::string szFilename = fileList[i].szFilename;
+
+			if ( !( CompareFileMD5 ( szMd5, ( GTAPath + szFilename ) ) ) )
+			{
+				std::cout << "Nonstandard GTA file: " << fileList[i].szFilename << std::endl;
+
+				Log::WriteStringToLog ( "Nonstandard GTA file: ", szFilename );
+				Log::WriteStringToLog ( GetFileMD5 ( GTAPath + szFilename ) );
+				Log::WriteStringToLog ( "Value should be: ", szMd5 );
+				Log::WriteStringToLog ( "" );
+			}
+			printf ( "Checking %i out of %i...\r", i, ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) );
+			fflush ( stdout );
+    }
+
 	// collect more information and output to log file
 	std::cout << "Gathering information. Please wait..." << std::endl;
 	ProgressBar ( 0 );
@@ -154,11 +176,9 @@ void Diag::Begin ( void )
 
 	ProgressBar ( 60 );
 
-	// get relevant MD5sums
+	// get relevant MD5sum(	s)
 	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
 	Log::WriteStringToLog ( "Value should be: 170b3a9108687b26da2d8901c6948a18 (HOODLUM 1.0)" );
-	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\models\\gta3.img" ) );
-	Log::WriteStringToLog ( "Value should be: 9282e0df8d7eee3c4a49b44758dd694d" );
 	Log::WriteStringToLog ( "" );
 
 	ProgressBar ( 80 );

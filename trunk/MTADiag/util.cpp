@@ -248,7 +248,7 @@ bool CompareFileMD5 ( std::string MD5sum, std::string filename )
 
 	if ( fp == NULL ) // we can't open it
 	{
-		return ( false );
+		return false;
 	}
 
 	MD5 md5; // initialize MD5
