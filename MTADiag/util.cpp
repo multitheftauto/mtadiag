@@ -326,3 +326,18 @@ void ProgressBar ( int percent )
 	}
 	std::cout << "\r" "[" << bar << "] "; std::cout.width ( 3 ); std::cout << percent << "%     " << std::flush;
 }
+
+// slightly modified version of https://msdn.microsoft.com/en-us/library/ms175774(v=vs.80).aspx
+std::string GetEnv ( std::string var )
+{
+	char *pValue;
+	size_t len;
+
+	errno_t err = _dupenv_s ( &pValue, &len, var.c_str() );
+
+	std::string envvar = pValue;
+	free ( pValue );
+
+	if ( err ) { return "Unable to read environment variable."; }
+	else { return envvar; }
+}

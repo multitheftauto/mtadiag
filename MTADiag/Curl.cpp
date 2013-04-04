@@ -23,7 +23,6 @@ size_t write_data ( void *ptr, size_t size, size_t nmemb, void *stream ); // wri
 bool Curl::DownloadFile ( std::string fileURL, std::string filePath )
 {
 	CURL *curl; // initialize curl
-	CURLcode res; // variable to store curl result
 	curl = curl_easy_init(); // initialize curl_easy
 	if ( curl ) // if curl was initialized
 	{
@@ -35,20 +34,22 @@ bool Curl::DownloadFile ( std::string fileURL, std::string filePath )
 		curl_easy_setopt ( curl, CURLOPT_WRITEDATA, fp ); // set the file path
 		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE ); // we want progress
 		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback ); // set the progress callback function
-		res = curl_easy_perform ( curl ); // perform; store result into res
+		CURLcode res = curl_easy_perform ( curl ); // perform; store result into res
 		curl_easy_cleanup ( curl ); // clean up
 		fclose ( fp ); // close the file
-	}
-	if ( !res ) // if we were successful
+
+		if ( !res ) // if we were successful
 		return true;
-	else // failure
+		else // failure
+		return false;
+	}
+	else // failure to initialize CURL
 		return false;
 }
 
 std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 {
 	CURL *curl; // initialize curl
-	CURLcode res; // variable to store curl result
 	curl = curl_easy_init(); // initialize curl_easy
 
 	std::string logText; // stores entire log file
@@ -92,17 +93,22 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE ); // we want progress
 		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback ); // set the progress callback function
 		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, write_data ); // set the write function
-		res = curl_easy_perform ( curl ); // perform; store result into res
+		CURLcode res = curl_easy_perform ( curl ); // perform; store result into res
 		curl_easy_cleanup ( curl ); // clean up
-	}
-	if ( !res ) // if we were successful
-	{
 
-		return response;
+		if ( !res ) // if we were successful
+		{
+
+			return response;
+		}
+		else // failure
+		{
+			return "Failed to upload to Pastebin.";
+		}
 	}
-	else // failure
+	else
 	{
-		return "Failed to upload to Pastebin.";
+		return "Failed to initialize CURL.";
 	}
 }
 
