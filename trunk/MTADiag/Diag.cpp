@@ -66,7 +66,6 @@ void Diag::Begin ( void )
 				std::cout << "Missing GTA file: " << fileList[i].szFilename << std::endl; // output any messed up file
 				bQuit = true; // we need to quit since the user's GTA install is probably screwed up
 			}
-			std::cout << szFilename << std::endl;
 			printf ( "Checking %i out of %i...\r", i, ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) );
 			fflush ( stdout );
     }
@@ -125,6 +124,8 @@ void Diag::Begin ( void )
 	Log::WriteStringToLog ( "" );
 
 	// check for any modified or nonstandard GTA files
+	std::cout << "Checking for modified or nonstandard GTA files, please wait..." << std::endl;
+
 	for ( unsigned int i = 0; i < ( sizeof ( fileList ) / sizeof ( fileList[0] ) ); i++ )
     {
 			std::string szMd5 = fileList[i].szMd5;
@@ -240,9 +241,9 @@ void Diag::Cleanup ( bool deleteLog )
 void Diag::GeneratePaths ( void )
 {
 	// obtain Temp and WINDOWS environment variables, and store system time
-	tempDir = getenv ( "Temp" );                        // get the Temp directory
-	systemRoot = getenv ( "SystemRoot" );	            // get the WINDOWS directory
-	programData = getenv ( "AllUsersProfile" );         // get the ProgramData directory 
+	tempDir = GetEnv ( "Temp" );                        // get the Temp directory
+	systemRoot = GetEnv ( "SystemRoot" );	            // get the WINDOWS directory
+	programData = GetEnv ( "AllUsersProfile" );         // get the ProgramData directory 
 	IsWow64Process ( GetCurrentProcess(), &bIsWOW64 );  // is MTADiag running under WOW64?
 	GetLocalTime ( &sysTime );                          // get the current system time
 	bQuit = false;                                      // initialize quit bool, used in GTA files checking
