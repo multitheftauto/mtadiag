@@ -305,6 +305,14 @@ bool FindInFile ( std::string filename, std::string value )
 	return false; // we didn't find it, return false
 }
 
+bool HasDigits ( std::string s )
+{
+	if ( std::string::npos != s.find_first_of ( "0123456789" ) )
+		return true;
+	else
+		return false;
+}
+
 void ProgressBar ( int percent )
 {
 	std::string bar;

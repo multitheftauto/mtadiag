@@ -30,5 +30,6 @@ bool                IsWin8OrNewer                      ( void );
 std::string         GetFileMD5                         ( std::string filename );
 bool                CompareFileMD5                     ( std::string MD5sum, std::string filename );
 bool                FindInFile                         ( std::string filename, std::string value );
+bool                HasDigits                          ( std::string s );
 void                ProgressBar                        ( int percent );
 std::string         GetEnv                             ( std::string variable );

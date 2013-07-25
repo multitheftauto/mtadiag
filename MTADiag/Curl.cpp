@@ -39,12 +39,77 @@ bool Curl::DownloadFile ( std::string fileURL, std::string filePath )
 		fclose ( fp ); // close the file
 
 		if ( !res ) // if we were successful
-		return true;
+			return true;
 		else // failure
-		return false;
+			return false;
 	}
 	else // failure to initialize CURL
 		return false;
+}
+
+std::string Curl::CreateMTAPasteBin ( std::string filePath, std::string pasteName )
+{
+	CURL *curl; // initialize curl
+	curl = curl_easy_init(); // initialize curl_easy
+
+	std::string logText; // stores entire log file
+	std::string post; // stores POST string
+	std::stringstream ss; // create a stringstream
+	std::ifstream file;
+
+	// read entire MTADiag log into string
+	file.open ( filePath.c_str(), std::ios::in );
+		if ( file )
+		{
+			ss << file.rdbuf();
+			logText = ss.str();
+		}
+	file.close();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	ss	<< "code2="
+		<< curl_easy_escape ( curl, logText.c_str(), logText.length() ) // urlencode log file contents
+	    << "&"
+		<< "format=text&"
+		<< "postkey=&"
+		<< "paste=Submit&"
+		<< "expiry=m&"
+		<< "give_pid=yes&"
+		<< "poster="
+		<< curl_easy_escape ( curl, pasteName.c_str(), pasteName.length() ) // urlencode MTADiag log filename
+		<< "&";
+	post = ss.str();
+
+	// clear the stringstream
+	ss.str ("");
+	ss.clear();
+
+	if ( curl ) // if curl was initialized
+	{
+		curl_easy_setopt ( curl, CURLOPT_URL, "http://pastebin.mtasa.com/index.php" ); // set the URL
+		curl_easy_setopt ( curl, CURLOPT_POSTFIELDS, post.c_str() ); // set our log file as the POST field
+		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE ); // we want progress
+		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback ); // set the progress callback function
+		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, write_data ); // set the write function
+		CURLcode res = curl_easy_perform ( curl ); // perform; store result into res
+		curl_easy_cleanup ( curl ); // clean up
+
+		if ( !res ) // if we were successful
+		{
+			return response;
+		}
+		else // failure
+		{
+			return "Failed to upload to Pastebin.";
+		}
+	}
+	else
+	{
+		return "Failed to initialize CURL.";
+	}
 }
 
 std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
@@ -77,7 +142,7 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 		<< curl_easy_escape ( curl, pasteName.c_str(), pasteName.length() ) // urlencode MTADiag log filename
 		<< "&"
 		<< "api_paste_expire_date=1M&" // paste will expire in one month
-		<< "api_dev_key=provide_your_own&" // Pastebin API dev key
+		<< "api_dev_key=&" // Pastebin API dev key
 		<< "api_paste_code="
 		<< curl_easy_escape ( curl, logText.c_str(), logText.length() ); // urlencode log file contents
 	post = ss.str();
@@ -98,7 +163,6 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 
 		if ( !res ) // if we were successful
 		{
-
 			return response;
 		}
 		else // failure

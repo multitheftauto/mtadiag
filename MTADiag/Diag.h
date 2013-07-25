@@ -41,7 +41,7 @@
 // Nightly download URLs
 #define MTA11NightlyURL "https://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "https://nightly.mtasa.com/?mtasa-1.2-rc-latest"
-#define MTA13NightlyURL "https://nightly.mtasa.com/?mtasa-1.3.1-rc-latest"
+#define MTA13NightlyURL "https://nightly.mtasa.com/?mtasa-1.3.3-rc-latest"
 #define MTA14NightlyURL "https://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
 #define MTA15NightlyURL "https://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
 
@@ -234,11 +234,11 @@ namespace Diag {
          {"da741c471b42859c99b3468bde1dc621", "\\data\\Decision\\chris\\ryder3.ped"},
          {"36e16f72d8be78bb8628478d5642860d", "\\data\\Decision\\david\\dam_sec.ped"},
          {"bf932fd285c05f708171b2e7cf0abe35", "\\data\\Decision\\david\\hei2_sc.ped"},
-         {"4d5f2754d6236d7e8c765def78b0fd68", "\\data\\Icons\\app.ico"},
-         {"ca533637e0a1aac05c9b14a98069c224", "\\data\\Icons\\bin.ico"},
-         {"ffcc3a0d32517475bc83f08331169ada", "\\data\\Icons\\saicon.ICN"},
-         {"ffcc3a0d32517475bc83f08331169ada", "\\data\\Icons\\saicon2.ICN"},
-         {"ffcc3a0d32517475bc83f08331169ada", "\\data\\Icons\\saicon3.ICN"},
+         //{"4d5f2754d6236d7e8c765def78b0fd68", "\\data\\Icons\\app.ico"},
+         //{"ca533637e0a1aac05c9b14a98069c224", "\\data\\Icons\\bin.ico"},
+         //{"ffcc3a0d32517475bc83f08331169ada", "\\data\\Icons\\saicon.ICN"},
+         //{"ffcc3a0d32517475bc83f08331169ada", "\\data\\Icons\\saicon2.ICN"},
+         //{"ffcc3a0d32517475bc83f08331169ada", "\\data\\Icons\\saicon3.ICN"},
          {"b65284518b3bab328530eb0f2b969d86", "\\data\\Paths\\NODES0.DAT"},
          {"167712a4ec91fd811670b120ba13ec33", "\\data\\Paths\\NODES1.DAT"},
          {"da13b3a0422f2866cb3cab02a93296fe", "\\data\\Paths\\NODES10.DAT"},
@@ -511,9 +511,9 @@ namespace Diag {
          //{"497d6d1447c62e57c55db49444876fac", "\\movies\\GTAtitles.mpg"},
          //{"fe0ddfa024d1296597890f27d24ae335", "\\movies\\Logo.mpg"},
          {"6791e6e0ffa6317af8a0dff648c9633d", "\\text\\american.gxt"},
-         {"3d069d3322809ccae92f315f53b5ad52", "\\text\\french.gxt"},
-         {"7801fc85df72041ba497bade4b258da5", "\\text\\german.gxt"},
-         {"fe4b7386f7149826ec682c5816f91ae4", "\\text\\italian.gxt"},
-         {"71e0281b4ff0ec6f192a2bda4d00effd", "\\text\\spanish.gxt"},
+         //{"3d069d3322809ccae92f315f53b5ad52", "\\text\\french.gxt"},
+         //{"7801fc85df72041ba497bade4b258da5", "\\text\\german.gxt"},
+         //{"fe4b7386f7149826ec682c5816f91ae4", "\\text\\italian.gxt"},
+         //{"71e0281b4ff0ec6f192a2bda4d00effd", "\\text\\spanish.gxt"},
     };
 }

@@ -119,7 +119,7 @@
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -135,7 +135,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libcurl.lib"
 				LinkIncremental="1"
-				UACExecutionLevel="2"
+				UACExecutionLevel="0"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -190,6 +190,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\md5.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\util.cpp"
 				>
 			</File>
@@ -213,6 +217,10 @@
 			</File>
 			<File
 				RelativePath=".\Log.h"
+				>
+			</File>
+			<File
+				RelativePath=".\md5.h"
 				>
 			</File>
 			<File
