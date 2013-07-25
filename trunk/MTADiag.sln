@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MTADiag", "MTADiag\MTADiag.vcproj", "{C55F3E8F-3FC0-45F5-B595-48D3F1207E6C}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MTADiag", "MTADiag\MTADiag.vcxproj", "{C55F3E8F-3FC0-45F5-B595-48D3F1207E6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -19,7 +19,7 @@
 namespace Curl {
 
 	bool                  DownloadFile            ( std::string fileURL, std::string filePath );
+	std::string           CreateMTAPasteBin       ( std::string filePath, std::string pasteName );
 	std::string           CreatePasteBin          ( std::string filePath, std::string pasteName );
-
 	static std::string    response;               // HTTP POST response
 }

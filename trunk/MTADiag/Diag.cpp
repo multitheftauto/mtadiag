@@ -18,6 +18,7 @@
 
 //#define SKIPUPDATE
 //#define SKIPDXDIAG
+//#define SKIPFILECHECK
 //#define DEBUGOUTPUT // output contents of files vector
 
 std::vector<std::string>      Diag::files;
@@ -53,7 +54,7 @@ void Diag::Begin ( void )
 	// only check 32-bit OSes due to compatibility mode settings *NOT* being written to Wow6432Node on 64-bit OSes
 	// and I can't seem to query non-Wow6432Node keys - maybe I'm doing something wrong?
 	if ( !bIsWOW64 ) { CompatRemoved2 = DeleteCompatibilityEntries ( CompatModeRegKey, HKEY_LOCAL_MACHINE ); }
-
+#ifndef SKIPFILECHECK
 	// check for any missing GTA files
 	std::cout << "Checking for missing GTA files, please wait..." << std::endl;
 
@@ -66,8 +67,7 @@ void Diag::Begin ( void )
 				std::cout << "Missing GTA file: " << fileList[i].szFilename << std::endl; // output any messed up file
 				bQuit = true; // we need to quit since the user's GTA install is probably screwed up
 			}
-			printf ( "Checking %i out of %i...\r", i, ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) );
-			fflush ( stdout );
+			std::cout << "\rChecking " << ( i + 1 ) << " out of " << ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) << "...";
     }
 	std::cout << std::endl;
 	if ( bQuit )
@@ -77,7 +77,7 @@ void Diag::Begin ( void )
 		system ( "pause" );
 		exit ( EXIT_FAILURE ); // exit
 	};
-
+#endif
 	// check if MTA version matches the latest auto-update nightly
 	if ( Curl::DownloadFile ( MTAVerURL, files[1].c_str() ) ) // download the version appropriation HTML
 	{
@@ -122,7 +122,7 @@ void Diag::Begin ( void )
 	if ( CompatRemoved1 == true || CompatRemoved2 == true )
 		Log::WriteStringToLog ( "Compat. mode deleted:  Yes");
 	Log::WriteStringToLog ( "" );
-
+#ifndef SKIPFILECHECK
 	// check for any modified or nonstandard GTA files
 	std::cout << "Checking for modified or nonstandard GTA files, please wait..." << std::endl;
 
@@ -140,10 +140,10 @@ void Diag::Begin ( void )
 				Log::WriteStringToLog ( "Value should be: ", szMd5 );
 				Log::WriteStringToLog ( "" );
 			}
-			printf ( "Checking %i out of %i...\r", i, ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) );
-			fflush ( stdout );
+			std::cout << "\rChecking " << ( i + 1 ) << " out of " << ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) << "...";
     }
-
+	std::cout << std::endl;
+#endif
 	// collect more information and output to log file
 	std::cout << "Gathering information. Please wait..." << std::endl;
 	ProgressBar ( 0 );
@@ -199,11 +199,12 @@ void Diag::Begin ( void )
 	// upload to PasteBin
 	std::cout << "Log file generated. Uploading to Pastebin..." << std::endl;
 
-	PasteBinResult = Curl::CreatePasteBin ( files[0], logFileName ); // store the HTTP POST result into PasteBinResult
+	PasteBinResult = Curl::CreateMTAPasteBin ( files[0], logFileName ); // store the HTTP POST result into PasteBinResult
 
 	// upload successful; copy URL to clipboard
-	if ( strstr ( PasteBinResult.c_str(), "http://pastebin.com/" ) )
+	if ( HasDigits ( PasteBinResult ) && !( strstr ( PasteBinResult.c_str(), "DOCTYPE" ) ) )
 	{
+		PasteBinResult.insert ( 0, "http://pastebin.mtasa.com/" );
 		if ( CopyToClipboard ( PasteBinResult ) ) // was copying to clipboard successful?
 		{
 			std::cout << "Pastebin link (" << PasteBinResult << ") copied to your clipboard." << std::endl << "Please include the Pastebin link in your forum post." << std::endl;
@@ -216,10 +217,10 @@ void Diag::Begin ( void )
 	}
 	else // upload failure, open the log in WordPad so the user can copy & paste it themselves
 	{
-		std::cout << std::endl << std::endl << "Failed to upload log file to Pastebin." << std::endl;
+		std::cout << std::endl << std::endl << "Failed to upload log file to MTA Pastebin." << std::endl;
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
-		std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.com." << std::endl;
-		std::cout << "Include the Pastebin link in your forum post." << std::endl << std::endl;	
+		std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.mtasa.com." << std::endl;
+		std::cout << "Include the MTA Pastebin link in your forum post." << std::endl << std::endl;	
 		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
 	}
 }
@@ -317,7 +318,7 @@ bool Diag::PollMTAVersions ( void )
 
 void Diag::UserPickVersion ( void )
 {
-	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to diagnose:" << std::endl;
+	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to diagnose by entering the number within the brackets:" << std::endl;
 
 	// iterate through currently installed MTA versions and output them
 	for (int i = 1; i < CUR_MTA_VERSIONS; i++)
