@@ -41,8 +41,8 @@
 // Nightly download URLs
 #define MTA11NightlyURL "https://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
 #define MTA12NightlyURL "https://nightly.mtasa.com/?mtasa-1.2-rc-latest"
-#define MTA13NightlyURL "https://nightly.mtasa.com/?mtasa-1.3.3-rc-latest"
-#define MTA14NightlyURL "https://nightly.mtasa.com/?mtasa-1.4-unstable-latest"
+#define MTA13NightlyURL "https://nightly.mtasa.com/?mtasa-1.3.5-rc-latest"
+#define MTA14NightlyURL "https://nightly.mtasa.com/?mtasa-1.4.1-rc-latest"
 #define MTA15NightlyURL "https://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
 
 #define MTAVerURL "https://nightly.mtasa.com/ver/"
@@ -136,18 +136,18 @@ namespace Diag {
          {"3649bb4a3cb2439aeec00dfee685fc7f", "\\audio\\streams\\ADVERTS"},
          {"b7d437493764d9ba333e786ce10c1b67", "\\audio\\streams\\AMBIENCE"},
          {"e26d86c7805d090d8210086876d6c35c", "\\audio\\streams\\BEATS"},
-         {"fe31259226e0b4a8a963c70840e1fe8f", "\\audio\\streams\\CH"},
-         {"c40bd5d69c17d182b653db890cb38001", "\\audio\\streams\\CO"},
-         {"900148b8141ea4c1e782c3a48dbfbf3b", "\\audio\\streams\\CR"},
+         //{"fe31259226e0b4a8a963c70840e1fe8f", "\\audio\\streams\\CH"},
+         //{"c40bd5d69c17d182b653db890cb38001", "\\audio\\streams\\CO"},
+         //{"900148b8141ea4c1e782c3a48dbfbf3b", "\\audio\\streams\\CR"},
          {"c25fcaa329b3d48f197ff4ed2a1d2a4d", "\\audio\\streams\\CUTSCENE"},
-         {"9b4c18e4f3e82f0fee41e30b2ea2246a", "\\audio\\streams\\DS"},
-         {"4e6f0c294db93ab7b086f14d0ee3cf54", "\\audio\\streams\\HC"},
-         {"909e7c4a7a29473e3885a96f987d7221", "\\audio\\streams\\MH"},
-         {"a1ec1cbe16dbb9f73022c6f33658abe2", "\\audio\\streams\\MR"},
-         {"e48b03a281243aeeb021f4b5323965e5", "\\audio\\streams\\NJ"},
-         {"49b83551c684e17164f2047dcba3e5aa", "\\audio\\streams\\RE"},
-         {"7491dc5325854c7117af6e31900f38dd", "\\audio\\streams\\RG"},
-         {"8b83278106608ac1954cc4fb688d0f52", "\\audio\\streams\\TK"},
+         //{"9b4c18e4f3e82f0fee41e30b2ea2246a", "\\audio\\streams\\DS"},
+         //{"4e6f0c294db93ab7b086f14d0ee3cf54", "\\audio\\streams\\HC"},
+         //{"909e7c4a7a29473e3885a96f987d7221", "\\audio\\streams\\MH"},
+         //{"a1ec1cbe16dbb9f73022c6f33658abe2", "\\audio\\streams\\MR"},
+         //{"e48b03a281243aeeb021f4b5323965e5", "\\audio\\streams\\NJ"},
+         //{"49b83551c684e17164f2047dcba3e5aa", "\\audio\\streams\\RE"},
+         //{"7491dc5325854c7117af6e31900f38dd", "\\audio\\streams\\RG"},
+         //{"8b83278106608ac1954cc4fb688d0f52", "\\audio\\streams\\TK"},
          {"f638fae1023422aef37b22b336e7fdc6", "\\data\\AudioEvents.txt"},
          {"6a484b0b2356c524207d939487f1bff1", "\\data\\animgrp.dat"},
          {"f856ba3a4ba25ae10b561aa764fba0c4", "\\data\\animviewer.dat"},
