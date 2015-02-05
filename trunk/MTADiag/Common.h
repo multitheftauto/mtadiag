@@ -23,4 +23,4 @@
 #include <shlobj.h>
 #include "Log.h"
 
-#define VERSION "2.7.9"
+#define VERSION "2.7.13"

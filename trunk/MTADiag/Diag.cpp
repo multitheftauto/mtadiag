@@ -159,6 +159,7 @@ void Diag::Begin ( void )
 	// write some of MTA's logs to our log
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile_old.txt", "logfile_old.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	Log::WriteFileToLog ( MTAPath + "\\timings.log", "timings.log" );
 	Log::WriteFileToLog ( MTAPath + "\\mods\\deathmatch\\resources\\benchmark\\output\\bench.log", "bench.log" ); // FPS benchmark log
