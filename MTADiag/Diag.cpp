@@ -65,7 +65,7 @@ void Diag::Begin ( void )
 			if ( !( CheckForFile ( GTAPath + szFilename ) ) )
 			{
 				std::cout << "Missing GTA file: " << fileList[i].szFilename << std::endl; // output any messed up file
-				bQuit = true; // we need to quit since the user's GTA install is probably screwed up
+				//bQuit = true; // we need to quit since the user's GTA install is probably screwed up
 			}
 			std::cout << "\rChecking " << ( i + 1 ) << " out of " << ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) << "...";
     }
@@ -158,9 +158,16 @@ void Diag::Begin ( void )
 
 	// write some of MTA's logs to our log
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
+
+    // 1.4
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile_old.txt", "logfile_old.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
+    // 1.5
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\logfile.txt", "logfile.txt" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\logfile.txt.1", "logfile.txt.1" );
+	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\CEGUI.log", "CEGUI.log" );
+
 	Log::WriteFileToLog ( MTAPath + "\\timings.log", "timings.log" );
 	Log::WriteFileToLog ( MTAPath + "\\mods\\deathmatch\\resources\\benchmark\\output\\bench.log", "bench.log" ); // FPS benchmark log
 	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
@@ -203,7 +210,7 @@ void Diag::Begin ( void )
 	PasteBinResult = Curl::CreateMTAPasteBin ( files[0], logFileName ); // store the HTTP POST result into PasteBinResult
 
 	// upload successful; copy URL to clipboard
-	if ( HasDigits ( PasteBinResult ) && !( strstr ( PasteBinResult.c_str(), "DOCTYPE" ) ) )
+	if ( HasDigits ( PasteBinResult ) && !( strstr ( PasteBinResult.c_str(), "DOCTYPE" ) ) && !( strstr ( PasteBinResult.c_str(), "error" ) ) )
 	{
 		PasteBinResult.insert ( 0, "http://pastebin.mtasa.com/" );
 		if ( CopyToClipboard ( PasteBinResult ) ) // was copying to clipboard successful?
@@ -220,7 +227,7 @@ void Diag::Begin ( void )
 	{
 		std::cout << std::endl << std::endl << "Failed to upload log file to MTA Pastebin." << std::endl;
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
-		std::cout << "Please paste the contents of the opened Wordpad window at www.pastebin.mtasa.com." << std::endl;
+		std::cout << "Please paste the contents of the opened Wordpad window at http://pastebin.mtasa.com" << std::endl;
 		std::cout << "Include the MTA Pastebin link in your forum post." << std::endl << std::endl;	
 		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
 	}
@@ -322,7 +329,7 @@ void Diag::UserPickVersion ( void )
 	std::cout << "You have multiple versions of MTA installed." << std::endl << "Please pick which version to diagnose by entering the number within the brackets:" << std::endl;
 
 	// iterate through currently installed MTA versions and output them
-	for (int i = 1; i < CUR_MTA_VERSIONS; i++)
+	for (int i = 1; i <= CUR_MTA_VERSIONS; i++)
 	{
 		if ( !MTAVersionsInstalled[i].empty() )
 			std::cout << "[" << i << "] 1." << i << std::endl;
@@ -332,10 +339,10 @@ void Diag::UserPickVersion ( void )
 		std::cout << "Enter version choice: ";
 		std::cin >> MTAVerChoice;
 
-		if ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice >= CUR_MTA_VERSIONS )
+		if ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice > CUR_MTA_VERSIONS )
 			std::cout << "Invalid choice entered." << std::endl;
 
-	} while ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice >= CUR_MTA_VERSIONS );
+	} while ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice > CUR_MTA_VERSIONS );
 }
 
 std::string Diag::GetMTAPath ( void )
@@ -494,9 +501,13 @@ void Diag::UpdateDirectX ( void )
 
 void Diag::DoSystemCommandWithOutput ( std::string command )
 {
-	system ( ( command + files[1] ).c_str() ); // do the command
+	Log::WriteStringToLog ( "----------------------------------------------------------------------------------" );
+	int iCommandReturn = system ( ( command + files[1] ).c_str() ); // do the command
 
-	Log::WriteFileToLog ( files[1], command ); // write the result to the log file with the passed command argument as a description
+	std::stringstream ss;
+	ss << command << " (returned " << iCommandReturn << ")";
+
+	Log::WriteFileToLog ( files[1], ss.str() ); // write the result to the log file with the passed command argument as a description
 }
 
 void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )

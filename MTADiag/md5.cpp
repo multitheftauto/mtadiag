@@ -337,7 +337,7 @@ std::string MD5::hexdigest() const
   if (!finalized)
     return "";
 
-  char buf[33];
+  char buf[133];
   for (int i=0; i<16; i++)
     sprintf_s(buf+i*2, 65, "%02x", digest[i]);
   buf[32]=0;
