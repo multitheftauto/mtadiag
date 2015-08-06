@@ -59,8 +59,8 @@ void Diag::Begin ( void )
 	std::cout << "Checking for missing GTA files, please wait..." << std::endl;
 
 	for ( unsigned int i = 0; i < ( sizeof ( fileList ) / sizeof ( fileList[0] ) ); i++ )
-    {
-            std::string szFilename = fileList[i].szFilename;
+	{
+			std::string szFilename = fileList[i].szFilename;
 
 			if ( !( CheckForFile ( GTAPath + szFilename ) ) )
 			{
@@ -68,7 +68,7 @@ void Diag::Begin ( void )
 				//bQuit = true; // we need to quit since the user's GTA install is probably screwed up
 			}
 			std::cout << "\rChecking " << ( i + 1 ) << " out of " << ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) << "...";
-    }
+	}
 	std::cout << std::endl;
 	if ( bQuit )
 	{
@@ -83,7 +83,7 @@ void Diag::Begin ( void )
 	{
 		std::string MTAVersionTrim = MTAVersion; // copy the MTAVersion string
 		MTAVersionTrim.resize ( 15 ); // trim the MTAVersion string stored in registry to 15 characters
-		                              // the version appropriation HTML has a 15 char string lacking two trailing zeros
+									  // the version appropriation HTML has a 15 char string lacking two trailing zeros
 		if ( FindInFile ( files[1].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
 			std::cout << "MTA is up-to-date." << std::endl << std::endl; // we've found it, hooray, we don't need to update MTA
 		else
@@ -127,9 +127,9 @@ void Diag::Begin ( void )
 	std::cout << "Checking for modified or nonstandard GTA files, please wait..." << std::endl;
 
 	for ( unsigned int i = 0; i < ( sizeof ( fileList ) / sizeof ( fileList[0] ) ); i++ )
-    {
+	{
 			std::string szMd5 = fileList[i].szMd5;
-            std::string szFilename = fileList[i].szFilename;
+			std::string szFilename = fileList[i].szFilename;
 
 			if ( !( CompareFileMD5 ( szMd5, ( GTAPath + szFilename ) ) ) )
 			{
@@ -141,7 +141,7 @@ void Diag::Begin ( void )
 				Log::WriteStringToLog ( "" );
 			}
 			std::cout << "\rChecking " << ( i + 1 ) << " out of " << ( sizeof ( fileList ) / sizeof ( fileList[0] ) ) << "...";
-    }
+	}
 	std::cout << std::endl;
 #endif
 	// collect more information and output to log file
@@ -159,11 +159,11 @@ void Diag::Begin ( void )
 	// write some of MTA's logs to our log
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 
-    // 1.4
+	// 1.4
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile_old.txt", "logfile_old.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
-    // 1.5
+	// 1.5
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\logfile.txt", "logfile.txt" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\logfile.txt.1", "logfile.txt.1" );
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\CEGUI.log", "CEGUI.log" );
@@ -335,14 +335,23 @@ void Diag::UserPickVersion ( void )
 			std::cout << "[" << i << "] 1." << i << std::endl;
 	}
 	// have the user pick between the versions
+	bool success;
 	do {
+		success = true;
 		std::cout << "Enter version choice: ";
 		std::cin >> MTAVerChoice;
 
-		if ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice > CUR_MTA_VERSIONS )
+		if ( std::cin.fail() ) {
+			std::cerr << "Invalid choice entered." << std::endl;
+			std::cin.clear();
+			std::cin.ignore ( std::numeric_limits<std::streamsize>::max(), '\n' );
+			success = false;
+		} else if ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice > CUR_MTA_VERSIONS ) {
 			std::cout << "Invalid choice entered." << std::endl;
+			success = false;
+		}
 
-	} while ( MTAVersionsInstalled[MTAVerChoice].empty() || MTAVerChoice > CUR_MTA_VERSIONS );
+	} while ( !success );
 }
 
 std::string Diag::GetMTAPath ( void )
