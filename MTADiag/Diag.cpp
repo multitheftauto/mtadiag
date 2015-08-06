@@ -212,7 +212,7 @@ void Diag::Begin ( void )
 	// upload successful; copy URL to clipboard
 	if ( HasDigits ( PasteBinResult ) && !( strstr ( PasteBinResult.c_str(), "DOCTYPE" ) ) && !( strstr ( PasteBinResult.c_str(), "error" ) ) )
 	{
-		PasteBinResult.insert ( 0, "http://pastebin.mtasa.com/" );
+		PasteBinResult.insert ( 0, "https://pastebin.mtasa.com/" );
 		if ( CopyToClipboard ( PasteBinResult ) ) // was copying to clipboard successful?
 		{
 			std::cout << "Pastebin link (" << PasteBinResult << ") copied to your clipboard." << std::endl << "Please include the Pastebin link in your forum post." << std::endl;
@@ -227,7 +227,7 @@ void Diag::Begin ( void )
 	{
 		std::cout << std::endl << std::endl << "Failed to upload log file to MTA Pastebin." << std::endl;
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
-		std::cout << "Please paste the contents of the opened Wordpad window at http://pastebin.mtasa.com" << std::endl;
+		std::cout << "Please paste the contents of the opened Wordpad window at https://pastebin.mtasa.com" << std::endl;
 		std::cout << "Include the MTA Pastebin link in your forum post." << std::endl << std::endl;	
 		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
 	}
