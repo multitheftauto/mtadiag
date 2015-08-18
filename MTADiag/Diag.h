@@ -43,7 +43,7 @@
 #define MTA12NightlyURL "https://nightly.mtasa.com/?mtasa-1.2-rc-latest"
 #define MTA13NightlyURL "https://nightly.mtasa.com/?mtasa-1.3.5-rc-latest"
 #define MTA14NightlyURL "https://nightly.mtasa.com/?mtasa-1.4.1-rc-latest"
-#define MTA15NightlyURL "https://nightly.mtasa.com/?mtasa-1.5-unstable-latest"
+#define MTA15NightlyURL "https://nightly.mtasa.com/?mtasa-1.5-rc-latest"
 
 #define MTAVerURL "https://nightly.mtasa.com/ver/"
 
