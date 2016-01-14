@@ -47,6 +47,15 @@
 
 #define MTAVerURL "https://nightly.mtasa.com/ver/"
 
+enum
+{
+    FILE_LOG,
+    FILE_TEMP,
+    FILE_NIGHTLY_INSTALLER,
+    FILE_WMIC_UNI,
+    FILE_D3DX9_DLL,
+};
+
 namespace Diag {
 
 	void                    Begin                       ( void );

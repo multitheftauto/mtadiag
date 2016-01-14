@@ -28,7 +28,7 @@ void Diag::Begin ( void )
 	// obtain necessary environment variables and generate filepaths used for temporary files
 	GeneratePaths();
 
-	Log::Open ( files[0] ); // create the log file and open it
+	Log::Open ( files[FILE_LOG] ); // create the log file and open it
 
 	Log::WriteStringToLog ( "MTADiag version", VERSION, false );
 	Log::WriteStringToLog ( " by Towncivilian" );
@@ -43,7 +43,7 @@ void Diag::Begin ( void )
 	std::cout << std::endl;
 
 	// check whether DirectX is up to date (actually whether D3DX9_43.dll is present in %systemroot%\system32)
-	if ( CheckForFile ( files[4].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
+	if ( CheckForFile ( files[FILE_D3DX9_DLL].c_str() ) ) { std::cout << "DirectX is up-to-date." << std::endl << std::endl; }
 	else { UpdateDirectX(); DXUpdated = 1; }
 
 	// remove any compatibility mode settings on gta_sa.exe and/or Multi Theft Auto.exe
@@ -79,12 +79,12 @@ void Diag::Begin ( void )
 	};
 #endif
 	// check if MTA version matches the latest auto-update nightly
-	if ( Curl::DownloadFile ( MTAVerURL, files[1].c_str() ) ) // download the version appropriation HTML
+	if ( Curl::DownloadFile ( MTAVerURL, files[FILE_TEMP].c_str() ) ) // download the version appropriation HTML
 	{
 		std::string MTAVersionTrim = MTAVersion; // copy the MTAVersion string
 		MTAVersionTrim.resize ( 15 ); // trim the MTAVersion string stored in registry to 15 characters
 									  // the version appropriation HTML has a 15 char string lacking two trailing zeros
-		if ( FindInFile ( files[1].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
+		if ( FindInFile ( files[FILE_TEMP].c_str(), ( MTAVersionTrim ) ) ) // look for the current MTA version string in it
 			std::cout << "MTA is up-to-date." << std::endl << std::endl; // we've found it, hooray, we don't need to update MTA
 		else
 		{
@@ -113,7 +113,7 @@ void Diag::Begin ( void )
 	Log::WriteStringToLog ( "D3D9.dll present:     ", D3D9Present );
 
 	// is DirectX up-to-date? (D3DX9_43.dll present)
-	std::string DirectXState = ( CheckForFile ( files[4] ) ) ? "Yes" : "No";
+	std::string DirectXState = ( CheckForFile ( files[FILE_D3DX9_DLL] ) ) ? "Yes" : "No";
 	Log::WriteStringToLog ( "DirectX up-to-date:   ", DirectXState );
 	if ( DXUpdated == 1 )
 		Log::WriteStringToLog ( "DirectX was updated:   Yes");
@@ -207,7 +207,7 @@ void Diag::Begin ( void )
 	// upload to PasteBin
 	std::cout << "Log file generated. Uploading to Pastebin..." << std::endl;
 
-	PasteBinResult = Curl::CreateMTAPasteBin ( files[0], logFileName ); // store the HTTP POST result into PasteBinResult
+	PasteBinResult = Curl::CreateMTAPasteBin ( files[FILE_LOG], logFileName ); // store the HTTP POST result into PasteBinResult
 
 	// upload successful; copy URL to clipboard
 	if ( HasDigits ( PasteBinResult ) && !( strstr ( PasteBinResult.c_str(), "DOCTYPE" ) ) && !( strstr ( PasteBinResult.c_str(), "error" ) ) )
@@ -229,7 +229,7 @@ void Diag::Begin ( void )
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
 		std::cout << "Please paste the contents of the opened Wordpad window at https://pastebin.mtasa.com" << std::endl;
 		std::cout << "Include the MTA Pastebin link in your forum post." << std::endl << std::endl;	
-		ShellExecute ( NULL, "open", "wordpad.exe", files[0].c_str(), NULL, SW_SHOW );
+		ShellExecute ( NULL, "open", "wordpad.exe", files[FILE_LOG].c_str(), NULL, SW_SHOW );
 	}
 }
 
@@ -243,7 +243,7 @@ void Diag::Cleanup ( bool deleteLog )
 	if ( deleteLog ) // do we need to delete our log? (if MTADiag quit prior to completing diagnostics)
 	{
 		Log::Close(); // close the log file for writing
-		remove ( files[0].c_str() ); // remove the MTADiag log
+		remove ( files[FILE_LOG].c_str() ); // remove the MTADiag log
 	}
 }
 
@@ -449,11 +449,11 @@ void Diag::UpdateMTA ( void )
 	}
 
 #ifndef SKIPUPDATE
-	if ( Curl::DownloadFile ( url, files[2].c_str() ) ) // if the download was successful, open the installer
+	if ( Curl::DownloadFile ( url, files[FILE_NIGHTLY_INSTALLER].c_str() ) ) // if the download was successful, open the installer
 	{
 		std::cout << std::endl << "Launching the installer..." << std::endl;
 		std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
-		system ( files[2].c_str()  );
+		system ( files[FILE_NIGHTLY_INSTALLER].c_str()  );
 	}
 	else // if the download failed, open a browser window to start the download of the nightly
 	{
@@ -511,12 +511,12 @@ void Diag::UpdateDirectX ( void )
 void Diag::DoSystemCommandWithOutput ( std::string command )
 {
 	Log::WriteStringToLog ( "----------------------------------------------------------------------------------" );
-	int iCommandReturn = system ( ( command + files[1] ).c_str() ); // do the command
+	int iCommandReturn = system ( ( command + files[FILE_TEMP] ).c_str() ); // do the command
 
 	std::stringstream ss;
 	ss << command << " (returned " << iCommandReturn << ")";
 
-	Log::WriteFileToLog ( files[1], ss.str() ); // write the result to the log file with the passed command argument as a description
+	Log::WriteFileToLog ( files[FILE_TEMP], ss.str() ); // write the result to the log file with the passed command argument as a description
 }
 
 void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )
@@ -524,7 +524,7 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std
 	std::string WMIC;
 	std::stringstream ss; // create a stringstream
 
-	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[3].c_str(); // wmic <arg1> <arg2> <arg3> <arg4>
+	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[FILE_WMIC_UNI].c_str(); // wmic <arg1> <arg2> <arg3> <arg4>
 	WMIC = ss.str ();
 
 	// clear the stringstream
@@ -533,11 +533,11 @@ void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std
 
 	system ( WMIC.c_str() ); // do it
 
-	ConvertUnicodeToASCII ( files[3], files[1] ); // convert the Unicode-encoded result to ASCII for proper display in the log file
+	ConvertUnicodeToASCII ( files[FILE_WMIC_UNI], files[FILE_TEMP] ); // convert the Unicode-encoded result to ASCII for proper display in the log file
 
-	remove ( files[3].c_str() ); // delete the Unicode-encoded log file
+	remove ( files[FILE_WMIC_UNI].c_str() ); // delete the Unicode-encoded log file
 
-	Log::WriteFileToLog ( files[1], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) ); // write the result to the log file with a description
+	Log::WriteFileToLog ( files[FILE_TEMP], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) ); // write the result to the log file with a description
 }
 
 void Diag::GetDir ( std::string directory )
@@ -545,7 +545,7 @@ void Diag::GetDir ( std::string directory )
 	std::string dirPath;
 	std::stringstream ss; // create a stringstream
 
-	ss << "dir \"" << directory << "\" >\"" << files[1].c_str() << "\""; // dir "<filepath>"
+	ss << "dir \"" << directory << "\" >\"" << files[FILE_TEMP].c_str() << "\""; // dir "<filepath>"
 	dirPath = ss.str();
 
 	// clear the stringstream
@@ -554,5 +554,5 @@ void Diag::GetDir ( std::string directory )
 
 	system ( dirPath.c_str() ); // do it
 
-	Log::WriteFileToLog ( files[1].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
+	Log::WriteFileToLog ( files[FILE_TEMP].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
 }

@@ -27,5 +27,5 @@ int main()
 
 	system ( "pause" ); // wait for user exit
 
-	remove ( Diag::files[0].c_str() ); // remove the generated MTADiag log
+	remove ( Diag::files[FILE_LOG].c_str() ); // remove the generated MTADiag log
 };
