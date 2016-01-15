@@ -36,8 +36,6 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 		return false; // failure!
 	}
 
-	if ( file.peek() == EOF ) { return false; } // this file is somehow already present; failure!
-
 	// trim any trailing spaces or ">" from system command piping from the item name
 	std::string garbage ( " >" );
 	size_t found;
@@ -45,13 +43,23 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 	found = itemName.find_last_not_of ( garbage );
 	if ( found != std::string::npos ) { itemName.erase ( found + 1 ); }
 
-	logfile << itemName // item name
-			<< ":" // colon
-			<< std::endl << std::endl // linebreaks
-			<< file.rdbuf() // file contents
-			<< std::endl // linebreak
-			<< std::flush; // clear the buffer
-
+    if ( file.peek() != EOF )
+    {
+	    logfile << itemName // item name
+			    << ":" // colon
+			    << std::endl << std::endl // linebreaks
+			    << file.rdbuf() // file contents
+			    << std::endl // linebreak
+			    << std::flush; // clear the buffer
+    }
+    else
+    {
+	    logfile << itemName // item name
+			    << ":" // colon
+			    << std::endl << std::endl // linebreaks
+			    << std::endl // linebreak
+			    << std::flush; // clear the buffer
+    }
 	file.close(); // close the file
 
 	return true; // success
@@ -65,4 +73,9 @@ void Log::WriteStringToLog ( std::string string, std::string string2, bool endli
 
 	if ( endline ) // add an endline if specified
 		logfile << std::endl;
+}
+
+void Log::WriteDividerToLog ( void )
+{
+	Log::WriteStringToLog ( std::string( 120, '-' ) );
 }

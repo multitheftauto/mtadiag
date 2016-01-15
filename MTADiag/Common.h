@@ -25,4 +25,4 @@
 #include <shlobj.h>
 #include "Log.h"
 
-#define VERSION "2.7.14"
+#define VERSION "2.7.15"

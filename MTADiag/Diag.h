@@ -56,6 +56,13 @@ enum
     FILE_D3DX9_DLL,
 };
 
+enum
+{
+    OUTPUT_NONE,
+    OUTPUT_ANSI,
+    OUTPUT_UNICODE,
+};
+
 namespace Diag {
 
 	void                    Begin                       ( void );
@@ -78,7 +85,7 @@ namespace Diag {
 	void                    UpdateMTA                   ( void );
 
 	// information gathering functions
-	void                    DoSystemCommandWithOutput   ( std::string command );
+	void                    DoSystemCommandWithOutput   ( std::string command, int outputType = OUTPUT_ANSI, DWORD maxTimeMs = 20000 );
 	void                    GetDir                      ( std::string directory );
 	void                    QueryWMIC                   ( std::string, std::string = "", std::string = "", std::string = "" );
 

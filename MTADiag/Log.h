@@ -23,6 +23,7 @@ namespace Log {
 
 	bool                    WriteFileToLog              ( std::string filePath, std::string itemName );
 	void                    WriteStringToLog            ( std::string string, std::string string2 = "", bool endline = true );
+	void                    WriteDividerToLog           ( void );
 
 	static std::ofstream    logfile;
 }

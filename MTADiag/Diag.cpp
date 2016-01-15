@@ -130,7 +130,11 @@ void Diag::Begin ( void )
 	{
 			std::string szMd5 = fileList[i].szMd5;
 			std::string szFilename = fileList[i].szFilename;
-
+#ifdef _DEBUG
+            // Speed up debugging
+            if ( GetAsyncKeyState( VK_F1 ) )
+                break;
+#endif
 			if ( !( CompareFileMD5 ( szMd5, ( GTAPath + szFilename ) ) ) )
 			{
 				std::cout << "Nonstandard GTA file: " << fileList[i].szFilename << std::endl;
@@ -150,33 +154,53 @@ void Diag::Begin ( void )
 
 	// gather the most useful system information first
 #ifndef SKIPDXDIAG
-	DoSystemCommandWithOutput ( "dxdiag /t " );
+	DoSystemCommandWithOutput ( std::string( "dxdiag /t " ) + files[FILE_TEMP], OUTPUT_NONE );
 	ProgressBar ( 10 );
 #endif
-	DoSystemCommandWithOutput ( "tasklist >" );
+	DoSystemCommandWithOutput ( "tasklist" );
 	ProgressBar ( 20 );
 
 	// write some of MTA's logs to our log
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\core.log", "core.log" );
 
 	// 1.4
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile.txt", "logfile.txt" );
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logfile_old.txt", "logfile_old.txt" );
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\CEGUI.log", "CEGUI.log" );
 	// 1.5
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\logfile.txt", "logfile.txt" );
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\logfile.txt.1", "logfile.txt.1" );
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\MTA\\logs\\CEGUI.log", "CEGUI.log" );
 
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\timings.log", "timings.log" );
+	Log::WriteDividerToLog ();
 	Log::WriteFileToLog ( MTAPath + "\\mods\\deathmatch\\resources\\benchmark\\output\\bench.log", "bench.log" ); // FPS benchmark log
-	if ( IsVistaOrNewer() ) { Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" ); }
+	if ( IsVistaOrNewer() )
+    {
+    	Log::WriteDividerToLog ();
+        Log::WriteFileToLog ( programData + "\\MTA San Andreas All\\" + MTAShortVersion + "\\report.log", "report.log" );
+    }
 
 	ProgressBar ( 40 );
 
-	DoSystemCommandWithOutput ( "ipconfig /all >" ); // get network configuration
-	if ( IsVistaOrNewer() ) { DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true >" ); } // might help resolve Visual C++ runtime issues
+	DoSystemCommandWithOutput ( "ipconfig /all" ); // get network configuration
+	ProgressBar ( 45 );
+	if ( IsVistaOrNewer() )
+    {
+         // might help resolve Visual C++ runtime issues
+        DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true" );
+    }
+	ProgressBar ( 50 );
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" ); // get some video controller information
+	ProgressBar ( 55 );
 
 	// get directory listing of some folders
 	GetDir ( ( MTAPath + "\\MTA" ) );
@@ -186,6 +210,7 @@ void Diag::Begin ( void )
 	ProgressBar ( 60 );
 
 	// get relevant MD5sum(	s)
+    Log::WriteDividerToLog ();
 	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
 	Log::WriteStringToLog ( "Value should be: 170b3a9108687b26da2d8901c6948a18 (HOODLUM 1.0)" );
 	Log::WriteStringToLog ( "" );
@@ -193,6 +218,7 @@ void Diag::Begin ( void )
 	ProgressBar ( 80 );
 
 	// font diagnostics
+    Log::WriteDividerToLog ();
 	Log::WriteStringToLog ( "Verdana (TrueType) registry value:", ReadRegKey ( "Verdana (TrueType)", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" ) );
 	Log::WriteStringToLog ( GetFileMD5 ( systemRoot + "\\Fonts\\verdana.ttf" ) );
 	Log::WriteStringToLog ( "Value should be: ba34b303291e36596759eb46ad9c51f2 (Win 8) / 6eee3713d2330d93183846f2d34f0976 (Win 7)" );
@@ -508,40 +534,20 @@ void Diag::UpdateDirectX ( void )
 	remove ( DXWebSetupPath.c_str() ); // delete the temporary file
 }
 
-void Diag::DoSystemCommandWithOutput ( std::string command )
-{
-	Log::WriteStringToLog ( "----------------------------------------------------------------------------------" );
-	int iCommandReturn = system ( ( command + files[FILE_TEMP] ).c_str() ); // do the command
-
-	std::stringstream ss;
-	ss << command << " (returned " << iCommandReturn << ")";
-
-	Log::WriteFileToLog ( files[FILE_TEMP], ss.str() ); // write the result to the log file with the passed command argument as a description
-}
-
 void Diag::QueryWMIC ( std::string arg1, std::string arg2, std::string arg3, std::string arg4 )
 {
 	std::string WMIC;
 	std::stringstream ss; // create a stringstream
 
-	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4 << " >" << files[FILE_WMIC_UNI].c_str(); // wmic <arg1> <arg2> <arg3> <arg4>
+	ss << "wmic " << arg1 << " " << arg2 << " " << arg3 << " " << arg4;    // wmic <arg1> <arg2> <arg3> <arg4>
 	WMIC = ss.str ();
 
-	// clear the stringstream
-	ss.str ("");
-	ss.clear();
-
-	system ( WMIC.c_str() ); // do it
-
-	ConvertUnicodeToASCII ( files[FILE_WMIC_UNI], files[FILE_TEMP] ); // convert the Unicode-encoded result to ASCII for proper display in the log file
-
-	remove ( files[FILE_WMIC_UNI].c_str() ); // delete the Unicode-encoded log file
-
-	Log::WriteFileToLog ( files[FILE_TEMP], ( "WMIC " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 ) ); // write the result to the log file with a description
+    DoSystemCommandWithOutput ( WMIC, OUTPUT_UNICODE );
 }
 
 void Diag::GetDir ( std::string directory )
 {
+    Log::WriteDividerToLog ();
 	std::string dirPath;
 	std::stringstream ss; // create a stringstream
 
@@ -555,4 +561,90 @@ void Diag::GetDir ( std::string directory )
 	system ( dirPath.c_str() ); // do it
 
 	Log::WriteFileToLog ( files[FILE_TEMP].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
+}
+
+void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWORD maxTimeMs )
+{
+	Log::WriteDividerToLog();
+
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;       
+
+    HANDLE h = NULL;
+    if ( outputType != OUTPUT_NONE )
+    {
+        // File for output to be redirected to
+        h = CreateFile( files[FILE_TEMP].c_str(),
+            FILE_APPEND_DATA,
+            FILE_SHARE_WRITE | FILE_SHARE_READ,
+            &sa,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            NULL );
+        if ( h == NULL )
+        {
+	        Log::WriteStringToLog ( "**** DoSystemCommandWithOutput: Error CreateFile FILE_TEMP" );
+        }
+    }
+
+    PROCESS_INFORMATION pi; 
+    STARTUPINFO si;
+    BOOL ret = FALSE; 
+    DWORD flags = CREATE_NO_WINDOW;
+
+    ZeroMemory( &pi, sizeof(PROCESS_INFORMATION) );
+    ZeroMemory( &si, sizeof(STARTUPINFO) );
+    si.cb = sizeof(STARTUPINFO); 
+    si.dwFlags |= STARTF_USESTDHANDLES;
+    si.hStdInput = NULL;
+    si.hStdError = h;
+    si.hStdOutput = h;
+
+    ret = CreateProcess( NULL, (LPSTR)command.c_str(), NULL, NULL, TRUE, flags, NULL, NULL, &si, &pi );
+
+	std::stringstream ss;
+    if ( ret == 0 )
+    {
+        DWORD dwError = GetLastError ();
+	    ss << command << " - ERROR: Unable to run - CreateProcess error: " << dwError;
+    }
+    else
+    {
+        // Apply time limit for command to complete
+        DWORD status = WaitForSingleObject ( pi.hProcess, maxTimeMs );
+        if ( status == WAIT_TIMEOUT )
+        {
+            TerminateProcess ( pi.hProcess, 1 );
+    	    ss << command << " - ERROR: Unable to complete - timed out after " << maxTimeMs << " ms";
+        }
+        else
+        if ( status != ERROR_SUCCESS )
+        {
+            TerminateProcess ( pi.hProcess, 1 );
+    	    ss << command << " - ERROR: Unable to complete - WaitForSingleObject status: " << status;
+        }
+        else
+        {
+            DWORD dwExitCode = 0xFFFFFFFF;
+            GetExitCodeProcess( pi.hProcess, &dwExitCode );
+	        ss << command << " (returned " << dwExitCode << ")";
+        }
+        CloseHandle( pi.hProcess );
+        CloseHandle( pi.hThread );
+    }
+
+    CloseHandle( h );
+
+    if ( outputType != OUTPUT_UNICODE )
+    {
+	    Log::WriteFileToLog ( files[FILE_TEMP], ss.str() ); // write the result to the log file with the passed command argument as a description
+    }
+    else
+    {
+	    ConvertUnicodeToASCII ( files[FILE_TEMP], files[FILE_WMIC_UNI] );
+	    Log::WriteFileToLog ( files[FILE_WMIC_UNI], ss.str() );
+	    remove ( files[FILE_WMIC_UNI].c_str() );
+    }
 }
