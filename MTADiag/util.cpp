@@ -128,7 +128,7 @@ void ConvertUnicodeToASCII ( std::string file1, std::string file2 )
 	std::stringstream ss; // create a stringstream
 	std::string convert;
 
-	ss << "TYPE " << file1 << " > " << file2; // TYPE <file1> > <file2>
+	ss << "TYPE " << QuoteFilename( file1 ) << " > " << QuoteFilename( file2 ); // TYPE <file1> > <file2>
 	convert = ss.str ();
 
 	// clear the stringstream
@@ -313,9 +313,22 @@ bool HasDigits ( std::string s )
 		return false;
 }
 
+int lastPercent = 0;
+int fraction = 0;
 void ProgressBar ( int percent )
 {
 	std::string bar;
+
+    if ( percent >= 0 )
+    {
+        lastPercent = percent;
+        fraction = 0;
+    }
+    else
+    {
+        percent = lastPercent;
+        fraction++;
+    }
 
 	for ( int i = 0; i < 50; i++ )
 	{
@@ -332,7 +345,21 @@ void ProgressBar ( int percent )
 			bar.replace ( i, 1, " " );
 		}
 	}
-	std::cout << "\r" "[" << bar << "] "; std::cout.width ( 3 ); std::cout << percent << "%     " << std::flush;
+	std::cout << "\r" "[" << bar << "] "; std::cout.width ( 3 ); std::cout << percent << "%     ";
+    if ( percent < 100 )
+	    std::cout << "" << fraction << "     "  << std::flush;
+    else
+	    std::cout << "     "  << std::flush;
+}
+
+void ProgressBarInc ( void )
+{
+    ProgressBar( -1 );
+}
+
+std::string QuoteFilename( const std::string& filename )
+{
+    return "\"" + filename + "\"";
 }
 
 // slightly modified version of https://msdn.microsoft.com/en-us/library/ms175774(v=vs.80).aspx

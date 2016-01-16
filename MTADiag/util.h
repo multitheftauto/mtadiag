@@ -32,4 +32,6 @@ bool                CompareFileMD5                     ( std::string MD5sum, std
 bool                FindInFile                         ( std::string filename, std::string value );
 bool                HasDigits                          ( std::string s );
 void                ProgressBar                        ( int percent );
+void                ProgressBarInc                     ( void );
+std::string         QuoteFilename                      ( const std::string& filename );
 std::string         GetEnv                             ( std::string variable );

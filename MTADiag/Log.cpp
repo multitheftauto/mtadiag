@@ -31,8 +31,13 @@ bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 
 	if ( !file ) // if we can't create the file
 	{
-		WriteStringToLog ( "Can't access ", filePath );
-		WriteStringToLog ( "" );
+	    logfile << itemName
+			    << ":"
+			    << std::endl
+			    << "Can't access "
+			    << filePath
+			    << std::endl << std::endl
+			    << std::flush;
 		return false; // failure!
 	}
 
@@ -73,6 +78,8 @@ void Log::WriteStringToLog ( std::string string, std::string string2, bool endli
 
 	if ( endline ) // add an endline if specified
 		logfile << std::endl;
+
+	logfile << std::flush;
 }
 
 void Log::WriteDividerToLog ( void )

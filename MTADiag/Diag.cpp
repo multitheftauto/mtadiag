@@ -20,6 +20,7 @@
 //#define SKIPDXDIAG
 //#define SKIPFILECHECK
 //#define DEBUGOUTPUT // output contents of files vector
+#define SKIP_MTA_UPDATE // Disabled until status page is fixed
 
 std::vector<std::string>      Diag::files;
 
@@ -32,6 +33,7 @@ void Diag::Begin ( void )
 
 	Log::WriteStringToLog ( "MTADiag version", VERSION, false );
 	Log::WriteStringToLog ( " by Towncivilian" );
+	std::cout << "MTADiag version " VERSION << std::endl;
 
 	// poll all currently installed MTA versions; if there is more than one installed, ask the user to pick one
 	if ( !PollMTAVersions() ) // PollMTAVersions will return true if there is only one version of MTA installed
@@ -78,6 +80,7 @@ void Diag::Begin ( void )
 		exit ( EXIT_FAILURE ); // exit
 	};
 #endif
+#ifndef SKIP_MTA_UPDATE
 	// check if MTA version matches the latest auto-update nightly
 	if ( Curl::DownloadFile ( MTAVerURL, files[FILE_TEMP].c_str() ) ) // download the version appropriation HTML
 	{
@@ -92,6 +95,7 @@ void Diag::Begin ( void )
 			UpdateMTA(); // update MTA to latest nightly / unstable build, depending on MTA's major version
 		}
 	}
+#endif
 
 	// write some information to the log file
 	Log::WriteStringToLog ( "MTA path:             ", MTAPath );
@@ -283,6 +287,22 @@ void Diag::GeneratePaths ( void )
 	GetLocalTime ( &sysTime );                          // get the current system time
 	bQuit = false;                                      // initialize quit bool, used in GTA files checking
 	MTAUpdated = false;                                 // initialize MTAUpdated bool
+
+    // Try to use 'MTA San Andreas All\MTADiag' as a temp dir first, so non admin can peek at it
+    {
+	    std::string altTempDir = programData + "\\MTA San Andreas All\\MTADiag";
+        SHCreateDirectoryEx( NULL, altTempDir.c_str(), NULL );
+        // Check can write there
+	    std::string altTempDirTest = altTempDir + "\\test.txt";
+	    std::ofstream file;
+	    file.open ( altTempDirTest.c_str(), std::ios::out );
+	    if ( file )
+        {
+            tempDir = altTempDir;
+            file.close();
+            remove( altTempDirTest.c_str() );
+        }
+    }
 
 	// generate MTADiag log file path
 	std::stringstream ss;
@@ -479,7 +499,7 @@ void Diag::UpdateMTA ( void )
 	{
 		std::cout << std::endl << "Launching the installer..." << std::endl;
 		std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
-		system ( files[FILE_NIGHTLY_INSTALLER].c_str()  );
+		system ( QuoteFilename( files[FILE_NIGHTLY_INSTALLER] ).c_str()  );
 	}
 	else // if the download failed, open a browser window to start the download of the nightly
 	{
@@ -521,7 +541,7 @@ void Diag::UpdateDirectX ( void )
 	if ( Curl::DownloadFile ( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) ) // success! open the file
 	{
 		std::cout << std::endl << "Follow the instructions to update DirectX." << std::endl << std::endl;
-		system ( DXWebSetupPath.c_str() );
+		system ( QuoteFilename( DXWebSetupPath ).c_str() );
 	}
 	else // failure; open a browser window to start the download of DXWebSetup
 	{
@@ -613,7 +633,14 @@ void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWOR
     else
     {
         // Apply time limit for command to complete
-        DWORD status = WaitForSingleObject ( pi.hProcess, maxTimeMs );
+        DWORD status = 1;
+        for( unsigned int i = 0 ; i < maxTimeMs ; i += 100 )
+        {
+            status = WaitForSingleObject ( pi.hProcess, 100 );
+            if ( status != WAIT_TIMEOUT )
+                break;
+            ProgressBarInc();
+        }
         if ( status == WAIT_TIMEOUT )
         {
             TerminateProcess ( pi.hProcess, 1 );
