@@ -139,12 +139,15 @@ void Diag::Begin ( void )
             if ( GetAsyncKeyState( VK_F1 ) )
                 break;
 #endif
-			if ( !( CompareFileMD5 ( szMd5, ( GTAPath + szFilename ) ) ) )
+            std::string strCalcedMd5 = GetFileMD5( GTAPath + szFilename );
+            long long fileSize = GetFileSize( GTAPath + szFilename );
+			if ( strCalcedMd5 != szMd5 )
 			{
-				std::cout << "Nonstandard GTA file: " << fileList[i].szFilename << std::endl;
+				std::cout << "Nonstandard GTA file: " << szFilename << std::endl;
 
 				Log::WriteStringToLog ( "Nonstandard GTA file: ", szFilename );
-				Log::WriteStringToLog ( GetFileMD5 ( GTAPath + szFilename ) );
+	            std::stringstream ss; ss << "MD5sum for " << szFilename << ": " << strCalcedMd5 << "   Size: " << fileSize;
+	            Log::WriteStringToLog ( ss.str() );
 				Log::WriteStringToLog ( "Value should be: ", szMd5 );
 				Log::WriteStringToLog ( "" );
 			}
@@ -161,7 +164,7 @@ void Diag::Begin ( void )
 	DoSystemCommandWithOutput ( std::string( "dxdiag /t " ) + files[FILE_TEMP], OUTPUT_NONE );
 	ProgressBar ( 10 );
 #endif
-	DoSystemCommandWithOutput ( "tasklist" );
+	DoSystemCommandWithOutput ( "tasklist", OUTPUT_ANSI, 120000 );
 	ProgressBar ( 20 );
 
 	// write some of MTA's logs to our log
@@ -196,12 +199,6 @@ void Diag::Begin ( void )
 	ProgressBar ( 40 );
 
 	DoSystemCommandWithOutput ( "ipconfig /all" ); // get network configuration
-	ProgressBar ( 45 );
-	if ( IsVistaOrNewer() )
-    {
-         // might help resolve Visual C++ runtime issues
-        DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true" );
-    }
 	ProgressBar ( 50 );
 	QueryWMIC ( "Path", "Win32_VideoController", "Get" ); // get some video controller information
 	ProgressBar ( 55 );
@@ -215,8 +212,8 @@ void Diag::Begin ( void )
 
 	// get relevant MD5sum(	s)
     Log::WriteDividerToLog ();
-	Log::WriteStringToLog ( GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
-	Log::WriteStringToLog ( "Value should be: 170b3a9108687b26da2d8901c6948a18 (HOODLUM 1.0)" );
+	Log::WriteStringToLog ( "MD5sum for gta_sa.exe: " + GetFileMD5 ( GTAPath + "\\gta_sa.exe" ) );
+	//Log::WriteStringToLog ( "Value should be: 170b3a9108687b26da2d8901c6948a18 (HOODLUM 1.0)" );
 	Log::WriteStringToLog ( "" );
 
 	ProgressBar ( 80 );
@@ -224,10 +221,19 @@ void Diag::Begin ( void )
 	// font diagnostics
     Log::WriteDividerToLog ();
 	Log::WriteStringToLog ( "Verdana (TrueType) registry value:", ReadRegKey ( "Verdana (TrueType)", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" ) );
-	Log::WriteStringToLog ( GetFileMD5 ( systemRoot + "\\Fonts\\verdana.ttf" ) );
+	Log::WriteStringToLog ( "MD5sum for verdana.ttf: " + GetFileMD5 ( systemRoot + "\\Fonts\\verdana.ttf" ) );
 	Log::WriteStringToLog ( "Value should be: ba34b303291e36596759eb46ad9c51f2 (Win 8) / 6eee3713d2330d93183846f2d34f0976 (Win 7)" );
 	Log::WriteStringToLog ( "" );
 	GetDir ( systemRoot + "\\Fonts\\verd*" );
+
+	ProgressBar ( 90 );
+
+    // Do this last in case of problems
+	if ( IsVistaOrNewer() )
+    {
+         // might help resolve Visual C++ runtime issues
+        DoSystemCommandWithOutput ( "wevtutil qe Application /q:\"Event [System [(Level=2)] ] [EventData [(Data='Multi Theft Auto.exe')] ]\" /c:1 /f:text /rd:true" );
+    }
 
 	ProgressBar ( 100 ); std::cout << std::endl << std::endl;
 
@@ -586,6 +592,7 @@ void Diag::GetDir ( std::string directory )
 void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWORD maxTimeMs )
 {
 	Log::WriteDividerToLog();
+    time_t startTime = time( NULL );
 
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(sa);
@@ -656,7 +663,7 @@ void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWOR
         {
             DWORD dwExitCode = 0xFFFFFFFF;
             GetExitCodeProcess( pi.hProcess, &dwExitCode );
-	        ss << command << " (returned " << dwExitCode << ")";
+	        ss << command << " (returned " << dwExitCode << ") [Took " << time( NULL ) - startTime << " seconds]";
         }
         CloseHandle( pi.hProcess );
         CloseHandle( pi.hThread );

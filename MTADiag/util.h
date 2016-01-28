@@ -28,6 +28,7 @@ bool                CopyToClipboard                    ( std::string contents );
 bool                IsVistaOrNewer                     ( void );
 bool                IsWin8OrNewer                      ( void );
 std::string         GetFileMD5                         ( std::string filename );
+long long           GetFileSize                        ( const std::string& filename );
 bool                CompareFileMD5                     ( std::string MD5sum, std::string filename );
 bool                FindInFile                         ( std::string filename, std::string value );
 bool                HasDigits                          ( std::string s );

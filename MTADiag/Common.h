@@ -23,6 +23,7 @@
 #include <fstream>
 #include <vector>
 #include <shlobj.h>
+#include <time.h>
 #include "Log.h"
 
-#define VERSION "2.7.17"
+#define VERSION "2.7.18"
