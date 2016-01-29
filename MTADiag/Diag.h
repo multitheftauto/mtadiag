@@ -85,7 +85,7 @@ namespace Diag {
 	void                    UpdateMTA                   ( void );
 
 	// information gathering functions
-	void                    DoSystemCommandWithOutput   ( std::string command, int outputType = OUTPUT_ANSI, DWORD maxTimeMs = 20000 );
+	DWORD                   DoSystemCommandWithOutput   ( std::string command, int outputType = OUTPUT_ANSI, DWORD maxTimeMs = 20000 );
 	void                    GetDir                      ( std::string directory );
 	void                    QueryWMIC                   ( std::string, std::string = "", std::string = "", std::string = "" );
 

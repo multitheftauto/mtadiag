@@ -161,7 +161,12 @@ void Diag::Begin ( void )
 
 	// gather the most useful system information first
 #ifndef SKIPDXDIAG
-	DoSystemCommandWithOutput ( std::string( "dxdiag /t " ) + files[FILE_TEMP], OUTPUT_NONE );
+	if ( DoSystemCommandWithOutput ( std::string( "dxdiag /dontskip /whql:off /t " ) + files[FILE_TEMP], OUTPUT_NONE, 120000 ) == WAIT_TIMEOUT )
+    {
+        // If timed out, try again but allow dxdiag to skip problem area
+	    ProgressBar ( 5 );
+        DoSystemCommandWithOutput ( std::string( "dxdiag /whql:off /t " ) + files[FILE_TEMP], OUTPUT_NONE, 120000 );
+    }
 	ProgressBar ( 10 );
 #endif
 	DoSystemCommandWithOutput ( "tasklist", OUTPUT_ANSI, 120000 );
@@ -589,7 +594,7 @@ void Diag::GetDir ( std::string directory )
 	Log::WriteFileToLog ( files[FILE_TEMP].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
 }
 
-void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWORD maxTimeMs )
+DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWORD maxTimeMs )
 {
 	Log::WriteDividerToLog();
     time_t startTime = time( NULL );
@@ -631,6 +636,7 @@ void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWOR
 
     ret = CreateProcess( NULL, (LPSTR)command.c_str(), NULL, NULL, TRUE, flags, NULL, NULL, &si, &pi );
 
+    DWORD status = ERROR_INVALID_FUNCTION;
 	std::stringstream ss;
     if ( ret == 0 )
     {
@@ -640,7 +646,6 @@ void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWOR
     else
     {
         // Apply time limit for command to complete
-        DWORD status = 1;
         for( unsigned int i = 0 ; i < maxTimeMs ; i += 100 )
         {
             status = WaitForSingleObject ( pi.hProcess, 100 );
@@ -652,6 +657,7 @@ void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWOR
         {
             TerminateProcess ( pi.hProcess, 1 );
     	    ss << command << " - ERROR: Unable to complete - timed out after " << maxTimeMs << " ms";
+            Sleep( 1000 );
         }
         else
         if ( status != ERROR_SUCCESS )
@@ -681,4 +687,6 @@ void Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWOR
 	    Log::WriteFileToLog ( files[FILE_WMIC_UNI], ss.str() );
 	    remove ( files[FILE_WMIC_UNI].c_str() );
     }
+
+    return status;
 }
