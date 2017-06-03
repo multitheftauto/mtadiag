@@ -161,7 +161,7 @@ void Diag::Begin ( void )
 
 	// gather the most useful system information first
 #ifndef SKIPDXDIAG
-	if ( DoSystemCommandWithOutput ( std::string( "dxdiag /dontskip /whql:off /t " ) + files[FILE_TEMP], OUTPUT_NONE, 120000 ) == WAIT_TIMEOUT )
+	if ( DoSystemCommandWithOutput ( std::string( "dxdiag /dontskip /whql:off /t " ) + files[FILE_TEMP], OUTPUT_NONE, 120000 ) != ERROR_SUCCESS )
     {
         // If timed out, try again but allow dxdiag to skip problem area
 	    ProgressBar ( 5 );
@@ -170,6 +170,8 @@ void Diag::Begin ( void )
 	ProgressBar ( 10 );
 #endif
 	DoSystemCommandWithOutput ( "tasklist", OUTPUT_ANSI, 120000 );
+	ProgressBar ( 20 );
+	DoSystemCommandWithOutput ( "net start", OUTPUT_ANSI, 120000 );
 	ProgressBar ( 20 );
 
 	// write some of MTA's logs to our log
@@ -669,7 +671,7 @@ DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWO
         {
             DWORD dwExitCode = 0xFFFFFFFF;
             GetExitCodeProcess( pi.hProcess, &dwExitCode );
-	        ss << command << " (returned " << dwExitCode << ") [Took " << time( NULL ) - startTime << " seconds]";
+	        ss << command << " (returned 0x" << std::hex << dwExitCode << ") [Took " << time( NULL ) - startTime << " seconds]";
         }
         CloseHandle( pi.hProcess );
         CloseHandle( pi.hThread );
