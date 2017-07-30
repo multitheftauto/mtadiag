@@ -26,4 +26,4 @@
 #include <time.h>
 #include "Log.h"
 
-#define VERSION "2.7.21"
+#define VERSION "2.7.22"
