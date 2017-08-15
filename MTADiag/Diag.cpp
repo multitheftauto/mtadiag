@@ -141,7 +141,7 @@ void Diag::Begin ( void )
 #endif
             std::string strCalcedMd5 = GetFileMD5( GTAPath + szFilename );
             long long fileSize = GetFileSize( GTAPath + szFilename );
-			if ( strCalcedMd5 != szMd5 )
+			if ( strCalcedMd5 != szMd5 && strCalcedMd5 != fileList[i].szMd5Alt )
 			{
 				std::cout << "Nonstandard GTA file: " << szFilename << std::endl;
 

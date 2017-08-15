@@ -123,6 +123,7 @@ namespace Diag {
     {
 		std::string szMd5;
 		std::string szFilename;
+		std::string szMd5Alt;
     } fileList[] = {
          {"309d860fc8137e5fe9e7056c33b4b8be", "\\eax.dll"},
          //{"0bfc9ecd5398cbef80ff7afc51620a45", "\\gta_sa.exe"},
@@ -142,20 +143,20 @@ namespace Diag {
          {"1717fe0644d83f7464665808b4b71b80", "\\audio\\SFX\\FEET"},
          {"7813ccc099987ff9e51c136ed919f665", "\\audio\\SFX\\GENRL"},
          {"80629d549f026ef5d27b6ac9fa453f90", "\\audio\\SFX\\PAIN_A"},
-         {"c32a4277b6872df2c8e630da8822778a", "\\audio\\SFX\\SCRIPT"},
-         {"24cc5f759d63838852eefb65251b5989", "\\audio\\SFX\\SPC_EA"},
-         {"3d0b77d5b48f450e118172d68317941c", "\\audio\\SFX\\SPC_FA"},
-         {"e817e9ee417cd5d99de0dbf7dc04d869", "\\audio\\SFX\\SPC_GA"},
-         {"b3c47f66781ce3db74c63c2676185765", "\\audio\\SFX\\SPC_NA"},
-         {"86d9efc06f19308875148b9cf0f8e1c3", "\\audio\\SFX\\SPC_PA"},
-         {"0f188011ba849665440dc03b62d6ca72", "\\audio\\streams\\AA"},
-         {"3649bb4a3cb2439aeec00dfee685fc7f", "\\audio\\streams\\ADVERTS"},
-         {"b7d437493764d9ba333e786ce10c1b67", "\\audio\\streams\\AMBIENCE"},
+         {"c32a4277b6872df2c8e630da8822778a", "\\audio\\SFX\\SCRIPT", "2063b2d00fbad96758002c1e883513a8"},
+         {"24cc5f759d63838852eefb65251b5989", "\\audio\\SFX\\SPC_EA", "4f4180fe66521c93a28968fec6cb0b2f"},
+         {"3d0b77d5b48f450e118172d68317941c", "\\audio\\SFX\\SPC_FA", "9fa4d9b7fbe88a224730f49a21266212"},
+         {"e817e9ee417cd5d99de0dbf7dc04d869", "\\audio\\SFX\\SPC_GA", "8552784046a97f98788ef36f6b607b62"},
+         {"b3c47f66781ce3db74c63c2676185765", "\\audio\\SFX\\SPC_NA", "5b9613589e772ccc8035dea7c451e306"},
+         {"86d9efc06f19308875148b9cf0f8e1c3", "\\audio\\SFX\\SPC_PA", "71deeccc49cbad499ea7ef03019faded"},
+         {"0f188011ba849665440dc03b62d6ca72", "\\audio\\streams\\AA", "ccce09f5a653a8f60d75d9eedb9585c0"},
+         {"3649bb4a3cb2439aeec00dfee685fc7f", "\\audio\\streams\\ADVERTS", "79fd7d5e5697a22dd26255d8d33412a3"},
+         {"b7d437493764d9ba333e786ce10c1b67", "\\audio\\streams\\AMBIENCE", "d21f1684709d4c1202d5b4faf1407343"},
          {"e26d86c7805d090d8210086876d6c35c", "\\audio\\streams\\BEATS"},
          //{"fe31259226e0b4a8a963c70840e1fe8f", "\\audio\\streams\\CH"},
          //{"c40bd5d69c17d182b653db890cb38001", "\\audio\\streams\\CO"},
          //{"900148b8141ea4c1e782c3a48dbfbf3b", "\\audio\\streams\\CR"},
-         {"c25fcaa329b3d48f197ff4ed2a1d2a4d", "\\audio\\streams\\CUTSCENE"},
+         {"c25fcaa329b3d48f197ff4ed2a1d2a4d", "\\audio\\streams\\CUTSCENE", "404303b0e680c3543c90b44b5250ff04"},
          //{"9b4c18e4f3e82f0fee41e30b2ea2246a", "\\audio\\streams\\DS"},
          //{"4e6f0c294db93ab7b086f14d0ee3cf54", "\\audio\\streams\\HC"},
          //{"909e7c4a7a29473e3885a96f987d7221", "\\audio\\streams\\MH"},
