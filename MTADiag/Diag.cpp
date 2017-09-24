@@ -13,6 +13,7 @@
 *****************************************************************************/ 
 
 #include "Diag.h"
+#include "Diag.hpp"
 #include "Curl.h"
 #include "util.h"
 
@@ -226,12 +227,33 @@ void Diag::Begin ( void )
 	ProgressBar ( 80 );
 
 	// font diagnostics
-    Log::WriteDividerToLog ();
-	Log::WriteStringToLog ( "Verdana (TrueType) registry value:", ReadRegKey ( "Verdana (TrueType)", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" ) );
-	Log::WriteStringToLog ( "MD5sum for verdana.ttf: " + GetFileMD5 ( systemRoot + "\\Fonts\\verdana.ttf" ) );
-	Log::WriteStringToLog ( "Value should be: ba34b303291e36596759eb46ad9c51f2 (Win 8) / 6eee3713d2330d93183846f2d34f0976 (Win 7)" );
-	Log::WriteStringToLog ( "" );
-	GetDir ( systemRoot + "\\Fonts\\verd*" );
+	// Uses same logic as CGUI_Impl::CreateFntFromWinFon
+	auto CheckWinFont = [](const std::string& strFontWinReg, const std::string& strFontWinFile)
+	{
+		auto CheckWinFontFile = [](const std::string& strFilename, const std::string& strTag)
+		{
+			std::string strMd5 = GetFileMD5(strFilename);
+			long long fileSize = GetFileSize(strFilename);
+			std::stringstream ss; ss << "  MD5sum for " << strFilename << ": " << strMd5 << "   Size: " << fileSize << "  " << strTag;
+			Log::WriteStringToLog(ss.str());
+		};
+		std::string strFontWinRegName = ReadRegKey( strFontWinReg, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\" );
+		std::string strWinFontsPath = systemRoot + "\\fonts";
+		std::stringstream ss; ss << "Checking " << strFontWinReg << " - Registry value:'" << strFontWinRegName << "'";
+		Log::WriteStringToLog(ss.str());
+		if ((strFontWinRegName.find(":") != std::string::npos) || strFontWinRegName[0] == '\\' || strFontWinRegName[0] == '/')
+			CheckWinFontFile(strFontWinRegName, "(Registry value)");
+		CheckWinFontFile(strWinFontsPath + "\\" + strFontWinRegName, "(Font path + registry value)");
+		if (strFontWinRegName != strFontWinFile)
+			CheckWinFontFile(strWinFontsPath + "\\" + strFontWinFile, "(Font path + default name)");
+		Log::WriteStringToLog("");
+	};
+
+	CheckWinFont("Verdana (TrueType)", "verdana.ttf");
+	CheckWinFont("Tahoma (TrueType)", "tahoma.ttf");
+	CheckWinFont("Tahoma Bold (TrueType)", "tahomabd.ttf");
+	GetDir(systemRoot + "\\Fonts\\verd*");
+	GetDir(systemRoot + "\\Fonts\\tahoma*");
 
 	ProgressBar ( 90 );
 
@@ -301,6 +323,13 @@ void Diag::GeneratePaths ( void )
 	bQuit = false;                                      // initialize quit bool, used in GTA files checking
 	MTAUpdated = false;                                 // initialize MTAUpdated bool
 
+	// Known folders without depending on env vars
+	wchar_t szResult[MAX_PATH] = L"";
+	if (SUCCEEDED(SHGetFolderPathW( NULL, CSIDL_WINDOWS, NULL, 0, szResult )))
+		systemRoot = ToUTF8(szResult);
+	if (SUCCEEDED(SHGetFolderPathW( NULL, CSIDL_COMMON_APPDATA, NULL, 0, szResult )))
+		programData = ToUTF8(szResult);
+
     // Try to use 'MTA San Andreas All\MTADiag' as a temp dir first, so non admin can peek at it
     {
 	    std::string altTempDir = programData + "\\MTA San Andreas All\\MTADiag";
@@ -308,7 +337,7 @@ void Diag::GeneratePaths ( void )
         // Check can write there
 	    std::string altTempDirTest = altTempDir + "\\test.txt";
 	    std::ofstream file;
-	    file.open ( altTempDirTest.c_str(), std::ios::out );
+	    file.open ( FromUTF8(altTempDirTest).c_str(), std::ios::out );
 	    if ( file )
         {
             tempDir = altTempDir;
@@ -512,7 +541,7 @@ void Diag::UpdateMTA ( void )
 	{
 		std::cout << std::endl << "Launching the installer..." << std::endl;
 		std::cout << "Run MTA once the installer has finished to see if it works now." << std::endl;
-		system ( QuoteFilename( files[FILE_NIGHTLY_INSTALLER] ).c_str()  );
+		_wsystem ( FromUTF8(QuoteFilename( files[FILE_NIGHTLY_INSTALLER] )).c_str()  );
 	}
 	else // if the download failed, open a browser window to start the download of the nightly
 	{
@@ -554,7 +583,7 @@ void Diag::UpdateDirectX ( void )
 	if ( Curl::DownloadFile ( DXWebSetupURL.c_str(), DXWebSetupPath.c_str() ) ) // success! open the file
 	{
 		std::cout << std::endl << "Follow the instructions to update DirectX." << std::endl << std::endl;
-		system ( QuoteFilename( DXWebSetupPath ).c_str() );
+		_wsystem ( FromUTF8(QuoteFilename( DXWebSetupPath )).c_str() );
 	}
 	else // failure; open a browser window to start the download of DXWebSetup
 	{
@@ -591,7 +620,7 @@ void Diag::GetDir ( std::string directory )
 	ss.str ("");
 	ss.clear();
 
-	system ( dirPath.c_str() ); // do it
+	_wsystem ( FromUTF8(dirPath).c_str() ); // do it
 
 	Log::WriteFileToLog ( files[FILE_TEMP].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
 }

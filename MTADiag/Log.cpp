@@ -13,10 +13,11 @@
 *****************************************************************************/ 
 
 #include "Log.h"
+#include "util.h"
 
 void Log::Open ( std::string filePath )
 {
-	logfile.open ( filePath.c_str(), std::ios::out ); // open the log file for writing
+	logfile.open ( FromUTF8(filePath).c_str(), std::ios::out ); // open the log file for writing
 }
 
 void Log::Close ( void )
@@ -27,7 +28,7 @@ void Log::Close ( void )
 bool Log::WriteFileToLog ( std::string filePath, std::string itemName )
 {
 	std::ifstream file;
-	file.open ( filePath.c_str(), std::ios::out ); // create the file
+	file.open ( FromUTF8(filePath).c_str(), std::ios::out ); // create the file
 
 	if ( !file ) // if we can't create the file
 	{

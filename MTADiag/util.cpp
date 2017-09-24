@@ -17,15 +17,18 @@
 std::string ReadRegKey ( std::string value, std::string subkey )
 {
 	HKEY hKey = 0; // handle to registry key
-	char buf[255] = {0}; // buffer for reading
+	wchar_t buf[512] = {0}; // buffer for reading
 	DWORD dwType = 1; // REG_SZ
 	DWORD dwBufSize = sizeof ( buf ); // buffer size
 
-	if ( RegOpenKeyEx ( HKEY_LOCAL_MACHINE, subkey.c_str(), NULL, KEY_READ, &hKey ) == ERROR_SUCCESS ) // if registry key read was successfully
+	std::wstring wstrSubKey = FromUTF8(subkey);
+	std::wstring wstrValue = FromUTF8(value);
+	if ( RegOpenKeyExW ( HKEY_LOCAL_MACHINE, wstrSubKey.c_str(), NULL, KEY_READ, &hKey ) == ERROR_SUCCESS ) // if registry key read was successfully
 	{
-		if ( RegQueryValueEx ( hKey, value.c_str(), NULL, &dwType, ( BYTE* ) buf, &dwBufSize ) == ERROR_SUCCESS ) // if registry value read was successfully
+		if ( RegQueryValueExW ( hKey, wstrValue.c_str(), NULL, &dwType, ( BYTE* ) buf, &dwBufSize ) == ERROR_SUCCESS ) // if registry value read was successfully
 		{
-			std::string value ( buf ); // store the value
+			buf[ dwBufSize / sizeof( wchar_t ) ] = 0;
+			std::string value ( ToUTF8( (wchar_t*)buf ) ); // store the value
 			RegCloseKey ( hKey ); // close the registry key
 			return value; // return the value
 		}
@@ -116,7 +119,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 
 bool CheckForFile ( std::string FilePath )
 {
-	std::ifstream ifile ( FilePath.c_str() );
+	std::ifstream ifile ( FromUTF8(FilePath).c_str() );
 	if ( ifile )
 		return true;
 	else
@@ -135,7 +138,7 @@ void ConvertUnicodeToASCII ( std::string file1, std::string file2 )
 	ss.str ("");
 	ss.clear();
 
-	system ( convert.c_str() ); // do it
+	_wsystem ( FromUTF8(convert).c_str() ); // do it
 }
 
 bool CopyToClipboard ( std::string contents )
@@ -202,7 +205,7 @@ std::string GetFileMD5 ( std::string filename )
 {
 	FILE *fp; // file pointer
 
-	fopen_s ( &fp, filename.c_str(), "rb" ); // try to open the file
+	_wfopen_s ( &fp, FromUTF8(filename).c_str(), L"rb" ); // try to open the file
 
 	if ( fp == NULL ) // we can't open it
 	{
@@ -239,7 +242,7 @@ bool CompareFileMD5 ( std::string MD5sum, std::string filename )
 long long GetFileSize ( const std::string& filename )
 {
 	FILE *fp;
-	fopen_s ( &fp, filename.c_str(), "rb" ); // try to open the file
+	_wfopen_s ( &fp, FromUTF8(filename).c_str(), L"rb" ); // try to open the file
 	if ( fp == NULL ) // we can't open it
 	{
 		return 0;
@@ -254,7 +257,7 @@ long long GetFileSize ( const std::string& filename )
 bool FindInFile ( std::string filename, std::string value )
 {
 	std::ifstream file;
-	file.open ( filename.c_str(), std::ios::in );
+	file.open ( FromUTF8(filename).c_str(), std::ios::in );
 	std::string line;
 
 	while ( file.good() ) // is the file good for reading still?
@@ -341,4 +344,33 @@ std::string GetEnv ( std::string var )
 
 	if ( err ) { return "Unable to read environment variable."; }
 	else { return envvar; }
+}
+
+std::wstring FromUTF8(const std::string& strPath)
+{
+	const char* szSrc = strPath.c_str();
+	unsigned int cCharacters = strlen(szSrc) + 1;
+	unsigned int cbUnicode = cCharacters * 4;
+	wchar_t* Dest = (wchar_t*)alloca(cbUnicode);
+	if ( MultiByteToWideChar(CP_UTF8, 0, szSrc, -1, Dest, (int)cbUnicode ) == 0)
+	{
+		return std::wstring();
+	}
+	else
+	{
+		return Dest;
+	}
+}
+
+std::string ToUTF8(const std::wstring& strPath)
+{
+	const wchar_t* pszW = strPath.c_str();
+	unsigned int cCharacters = wcslen(pszW) + 1;
+	unsigned int cbAnsi = cCharacters * 6;
+	char* pData = (char*)alloca(cbAnsi);
+	if (0 == WideCharToMultiByte(CP_UTF8, 0, pszW, cCharacters, pData, cbAnsi, NULL, NULL))
+	{
+		return "";
+	}
+	return pData;
 }

@@ -13,6 +13,7 @@
 *****************************************************************************/ 
 
 #include "Curl.h"
+#include "util.h"
 #include "curl/curl.h"
 #include "curl/easy.h"
 #include "curl/types.h"
@@ -27,7 +28,7 @@ bool Curl::DownloadFile ( std::string fileURL, std::string filePath )
 	if ( curl ) // if curl was initialized
 	{
 		FILE *fp; // file pointer
-		fopen_s ( &fp, filePath.c_str(), "wb" ); // open the temporary file download location
+		_wfopen_s ( &fp, FromUTF8(filePath).c_str(), L"wb" ); // open the temporary file download location
 		curl_easy_setopt ( curl, CURLOPT_SSL_VERIFYPEER, FALSE ); // used for https
 		curl_easy_setopt ( curl, CURLOPT_URL, fileURL.c_str() ); // set the URL
 		curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, fwrite ); // set the write function
@@ -58,7 +59,7 @@ std::string Curl::CreateMTAPasteBin ( std::string filePath, std::string pasteNam
 	std::ifstream file;
 
 	// read entire MTADiag log into string
-	file.open ( filePath.c_str(), std::ios::in );
+	file.open ( FromUTF8(filePath).c_str(), std::ios::in );
 		if ( file )
 		{
 			ss << file.rdbuf();
@@ -123,7 +124,7 @@ std::string Curl::CreatePasteBin ( std::string filePath, std::string pasteName )
 	std::ifstream file;
 
 	// read entire MTADiag log into string
-	file.open ( filePath.c_str(), std::ios::in );
+	file.open ( FromUTF8(filePath).c_str(), std::ios::in );
 		if ( file )
 		{
 			ss << file.rdbuf();

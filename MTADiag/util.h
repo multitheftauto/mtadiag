@@ -36,3 +36,5 @@ void                ProgressBar                        ( int percent );
 void                ProgressBarInc                     ( void );
 std::string         QuoteFilename                      ( const std::string& filename );
 std::string         GetEnv                             ( std::string variable );
+std::wstring        FromUTF8                           ( const std::string& strPath );
+std::string         ToUTF8                             ( const std::wstring& strPath );
