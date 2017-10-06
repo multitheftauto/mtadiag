@@ -18,7 +18,7 @@ extern std::vector<std::string>      Diag::files;
 
 int main()
 {
-	SetConsoleTitle ( "MTADiag v" VERSION ); // set the console title
+	SetConsoleTitleA ( "MTADiag v" VERSION ); // set the console title
 	std::cout << "MTADiag v" << VERSION << " by Towncivilian" << std::endl << std::endl; // tell the user what this program is
 
 	Diag::Begin(); // begin diagnostics

@@ -58,11 +58,11 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 
 	bool changed = false;
 
-	if ( RegOpenKeyEx ( hKeyType, subkey.c_str(), NULL, KEY_READ | KEY_WRITE, &hKey ) == ERROR_SUCCESS ) // if registry key read was successfully
+	if ( RegOpenKeyExA ( hKeyType, subkey.c_str(), NULL, KEY_READ | KEY_WRITE, &hKey ) == ERROR_SUCCESS ) // if registry key read was successfully
 	{
 		while ( result != ERROR_NO_MORE_ITEMS ) // loop until we run out of registry values to read
 		{
-			result = RegEnumValue ( hKey, index, buf, &dwBufSize, 0, NULL, NULL, NULL ); // attempt to enumerate values and store result
+			result = RegEnumValueA ( hKey, index, buf, &dwBufSize, 0, NULL, NULL, NULL ); // attempt to enumerate values and store result
 			dwBufSize = sizeof ( buf ); // set the buffer size to the read value's size
 
 			if ( result == ERROR_SUCCESS ) // if we read something
@@ -70,7 +70,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 				index++; // increment index
 				if ( strstr ( buf, "gta_sa.exe" ) || strstr ( buf, "Multi Theft Auto.exe" ) ) // check for filename matches
 				{
-					if ( RegQueryValueEx ( hKey, buf, NULL, &dwType, ( BYTE* ) buf2, &dwBuf2Size ) == ERROR_SUCCESS ) // read the value's data
+					if ( RegQueryValueExA ( hKey, buf, NULL, &dwType, ( BYTE* ) buf2, &dwBuf2Size ) == ERROR_SUCCESS ) // read the value's data
 					{
 						if ( strcmp ( buf2, "~ RUNASADMIN" ) == 0 || strcmp ( buf2, "RUNASADMIN" ) == 0 ) // is the value's data already just "RUNASADMIN"?
 						{
@@ -82,7 +82,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 							if ( IsWin8OrNewer() ) // is the user running Windows 8 or newer?
 							{
 								const char Win8Data[13] = "~ RUNASADMIN"; // set the data buffer to the proper string
-								RegSetValueEx ( hKey, buf, 0, dwType, ( BYTE* ) Win8Data, sizeof (Win8Data) ); // set the value data to RUNASADMIN only
+								RegSetValueExA ( hKey, buf, 0, dwType, ( BYTE* ) Win8Data, sizeof (Win8Data) ); // set the value data to RUNASADMIN only
 								changed = true;
 								index--;
 								continue;
@@ -90,7 +90,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 							else // 7 or older
 							{
 								const char XPData[11] = "RUNASADMIN"; // set the data buffer to the proper string
-								RegSetValueEx ( hKey, buf, 0, dwType, ( BYTE* ) XPData, sizeof (XPData) ); // set the value data to RUNASADMIN only
+								RegSetValueExA ( hKey, buf, 0, dwType, ( BYTE* ) XPData, sizeof (XPData) ); // set the value data to RUNASADMIN only
 								changed = true;
 								index--;
 								continue;
@@ -99,7 +99,7 @@ bool DeleteCompatibilityEntries ( std::string subkey, HKEY hKeyType )
 
 						else // the user only has other compatibility mode settings enabled
 						{
-							RegDeleteValue ( hKey, buf ); // delete the registry value
+							RegDeleteValueA ( hKey, buf ); // delete the registry value
 							changed = true;
 							index--;
 							continue;

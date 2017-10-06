@@ -14,9 +14,8 @@
 
 #include "Curl.h"
 #include "util.h"
-#include "curl/curl.h"
-#include "curl/easy.h"
-#include "curl/types.h"
+#include <curl/curl.h>
+#include <curl/easy.h>
 
 void progress_callback ( void* percent, double TotalToDL, double CurrentDL, double TotalToUL, double CurrentUL ); // percentage progress callback
 size_t write_data ( void *ptr, size_t size, size_t nmemb, void *stream ); // writes HTTP response to a string

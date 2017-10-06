@@ -294,7 +294,7 @@ void Diag::Begin ( void )
 		std::cout << "Error code: \"" << PasteBinResult << "\"" << std::endl;
 		std::cout << "Please paste the contents of the opened Wordpad window at https://pastebin.mtasa.com" << std::endl;
 		std::cout << "Include the MTA Pastebin link in your forum post." << std::endl << std::endl;	
-		ShellExecute ( NULL, "open", "wordpad.exe", QuoteFilename( files[FILE_LOG] ).c_str(), NULL, SW_SHOW );
+		ShellExecuteA ( NULL, "open", "wordpad.exe", QuoteFilename( files[FILE_LOG] ).c_str(), NULL, SW_SHOW );
 	}
 }
 
@@ -333,7 +333,7 @@ void Diag::GeneratePaths ( void )
     // Try to use 'MTA San Andreas All\MTADiag' as a temp dir first, so non admin can peek at it
     {
 	    std::string altTempDir = programData + "\\MTA San Andreas All\\MTADiag";
-        SHCreateDirectoryEx( NULL, altTempDir.c_str(), NULL );
+        SHCreateDirectoryExA( NULL, altTempDir.c_str(), NULL );
         // Check can write there
 	    std::string altTempDirTest = altTempDir + "\\test.txt";
 	    std::ofstream file;
@@ -547,7 +547,7 @@ void Diag::UpdateMTA ( void )
 	{
 		std::cout << "Unable to automatically download MTA patch. Launching download link..." << std::endl;
 		system ( "pause" ); // wait for user acknowledgement
-		ShellExecute ( NULL, "open", url.c_str(), NULL, NULL, SW_HIDE );
+		ShellExecuteA ( NULL, "open", url.c_str(), NULL, NULL, SW_HIDE );
 		std::cout << std::endl << "Install the patch. ";
 	}
 #endif
@@ -589,7 +589,7 @@ void Diag::UpdateDirectX ( void )
 	{
 		std::cout << "Unable to automatically download DirectX updater. Launching download link..." << std::endl;
 		system ( "pause" ); // wait for user acknowledgement
-		ShellExecute ( NULL, "open", DXWebSetupURL.c_str(), NULL, NULL, SW_HIDE );
+		ShellExecuteA ( NULL, "open", DXWebSetupURL.c_str(), NULL, NULL, SW_HIDE );
 		std::cout << "Continue when DirectX has finished updating." << std::endl;
 		system ( "pause" ); // wait for user acknowledgement
 	}
@@ -639,7 +639,7 @@ DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWO
     if ( outputType != OUTPUT_NONE )
     {
         // File for output to be redirected to
-        h = CreateFile( files[FILE_TEMP].c_str(),
+        h = CreateFileA( files[FILE_TEMP].c_str(),
             FILE_APPEND_DATA,
             FILE_SHARE_WRITE | FILE_SHARE_READ,
             &sa,
@@ -653,7 +653,7 @@ DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWO
     }
 
     PROCESS_INFORMATION pi; 
-    STARTUPINFO si;
+    STARTUPINFOA si;
     BOOL ret = FALSE; 
     DWORD flags = CREATE_NO_WINDOW;
 
@@ -665,7 +665,7 @@ DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWO
     si.hStdError = h;
     si.hStdOutput = h;
 
-    ret = CreateProcess( NULL, (LPSTR)command.c_str(), NULL, NULL, TRUE, flags, NULL, NULL, &si, &pi );
+    ret = CreateProcessA( NULL, (LPSTR)command.c_str(), NULL, NULL, TRUE, flags, NULL, NULL, &si, &pi );
 
     DWORD status = ERROR_INVALID_FUNCTION;
 	std::stringstream ss;

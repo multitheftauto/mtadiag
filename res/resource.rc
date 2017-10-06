@@ -12,4 +12,4 @@
 
 // remains consistent on all systems.
 
-IDI_APPLICATION     ICON          "res\\MTADiag.ico"
+IDI_APPLICATION     ICON          "MTADiag.ico"
