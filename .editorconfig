@@ -1,0 +1,12 @@
+root = true
+
+[*.{h,hpp,cpp}]
+insert_final_newline = true
+indent_style = tab
+indent_size = 4
+
+[*.lua]
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+indent_size = 4

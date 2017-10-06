@@ -1,0 +1,6 @@
+.vs/
+.vscode/
+
+bin/
+build/
+tools/vswhere.exe
