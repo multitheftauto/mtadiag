@@ -26,8 +26,15 @@ int main()
 	// Run servicing auto-fix script
 	try
 	{
-		ServicingScript ss;
-		ss.Run();
+		std::cout << "Do you want MTADiag to auto-fix your installation? By entering 'y' you allow us to make system changes." << std::endl;
+		std::string answer;
+		if (auto c = std::getchar(); c == 'y' || c == 'Y')
+		{
+			std::cout << "Alright! Starting now..." << std::endl;
+
+			ServicingScript ss;
+			ss.Run();
+		}
 	}
 	catch (std::runtime_error& ex)
 	{

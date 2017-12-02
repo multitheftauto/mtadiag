@@ -21,8 +21,9 @@ workspace "MTADiag"
 
 		project "MTADiag"
 			language "C++"
-			cppdialect "C++14"
+			cppdialect "C++17"
 			kind "ConsoleApp"
+			buildoptions { "/std:c++latest" }
 
 			defines { "BUILDING_LIBCURL" }
 			includedirs { "include", "vendor/curl/include" }
