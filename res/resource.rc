@@ -1,15 +1,14 @@
-/////////////////////////////////////////////////////////////////////////////
+/*****************************************************************************
+*
+* PROJECT: MTADiag
+* LICENSE: GNU GPL v3
+* FILE: resource.rc
+* PURPOSE: Resource file
+*
+* Multi Theft Auto is available from http://www.multitheftauto.com/
+*
+*****************************************************************************/
+#include "resource.h"
 
-//
-
-// Icon
-
-//
-
-
-
-// Icon with lowest ID value placed first to ensure application icon
-
-// remains consistent on all systems.
-
-IDI_APPLICATION     ICON          "MTADiag.ico"
+IDI_APPLICATION         ICON          "MTADiag.ico" // Icon with lowest ID value placed first to ensure application icon remains consistent on all systems.
+IDR_SERVICING_SCRIPT    TEXTFILE      "servicing.bat"

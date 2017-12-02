@@ -7,6 +7,7 @@ workspace "MTADiag"
 	toolset "v141_xp" -- Enable XP support
 	flags { "StaticRuntime" }
 	vectorextensions "SSE"
+	defines { "_CRT_SECURE_NO_WARNINGS", "WIN32_LEAN_AND_MEAN" }
 
 	filter "configurations:Debug"
 		targetsuffix "_d"
