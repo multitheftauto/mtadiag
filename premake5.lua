@@ -23,7 +23,9 @@ workspace "MTADiag"
 			language "C++"
 			cppdialect "C++17"
 			kind "ConsoleApp"
+
 			buildoptions { "/std:c++latest" }
+			linkoptions { "/MANIFESTUAC:\"level='requireAdministrator' \"" }
 
 			defines { "BUILDING_LIBCURL" }
 			includedirs { "include", "vendor/curl/include" }
