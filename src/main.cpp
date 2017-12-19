@@ -6,8 +6,6 @@
 * PURPOSE: MTA diagnostic tool
 * DEVELOPERS: Matthew "Towncivilian" Wolfe <ligushka@gmail.com>
 * 
-* 
-* 
 * Multi Theft Auto is available from http://www.multitheftauto.com/
 * 
 *****************************************************************************/ 
@@ -27,7 +25,8 @@ int main()
 	try
 	{
 		std::cout << "Do you want MTADiag to auto-fix your installation? By entering 'y' you allow us to make system changes." << std::endl;
-		if (auto c = std::getchar(); c == 'y' || c == 'Y')
+		auto c = std::getchar();
+		if (c == 'y' || c == 'Y')
 		{
 			std::cout << "Alright! Starting now..." << std::endl;
 
