@@ -21,6 +21,10 @@ int main()
 	SetConsoleTitleA ( "MTADiag v" VERSION ); // set the console title
 	std::cout << "MTADiag v" << VERSION << " by Towncivilian" << std::endl << std::endl; // tell the user what this program is
 
+	Diag::Begin(); // begin diagnostics
+
+	Diag::Cleanup(); // remove temporary files
+
 	// Run servicing auto-fix script
 	try
 	{
@@ -39,10 +43,6 @@ int main()
 		std::cout << "Could not run servicing script, because: " << ex.what() << "\n";
 		std::cout << "Continuing..." << std::endl;
 	}
-
-	Diag::Begin(); // begin diagnostics
-
-	Diag::Cleanup(); // remove temporary files
 
 	system ( "pause" ); // wait for user exit
 
