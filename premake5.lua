@@ -39,5 +39,6 @@ workspace "MTADiag"
 
 				"src/**.cpp",
 
-				"res/**.rc"
+				"res/**.rc",
+				"res/**.bat"
 			}
