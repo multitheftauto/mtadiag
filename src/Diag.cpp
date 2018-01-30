@@ -17,8 +17,6 @@
 #include "Curl.h"
 #include "util.h"
 
-#include <Shellapi.h>
-
 //#define SKIPUPDATE
 //#define SKIPDXDIAG
 //#define SKIPFILECHECK

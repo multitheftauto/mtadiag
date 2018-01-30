@@ -6,14 +6,14 @@
 * PURPOSE: MTA diagnostic tool
 * DEVELOPERS: Matthew "Towncivilian" Wolfe <ligushka@gmail.com>
 * 
+* 
+* 
 * Multi Theft Auto is available from http://www.multitheftauto.com/
 * 
 *****************************************************************************/ 
 
 #include "Common.h"
 #include "Diag.h"
-#include "ServicingScript.h"
-
 extern std::vector<std::string>      Diag::files;
 
 int main()
@@ -24,25 +24,6 @@ int main()
 	Diag::Begin(); // begin diagnostics
 
 	Diag::Cleanup(); // remove temporary files
-
-	// Run servicing auto-fix script
-	try
-	{
-		std::cout << "Do you want MTADiag to auto-fix your installation? By entering 'y' you allow us to make system changes." << std::endl;
-		auto c = std::getchar();
-		if (c == 'y' || c == 'Y')
-		{
-			std::cout << "Alright! Starting now..." << std::endl;
-
-			ServicingScript ss;
-			ss.Run();
-		}
-	}
-	catch (std::runtime_error& ex)
-	{
-		std::cout << "Could not run servicing script, because: " << ex.what() << "\n";
-		std::cout << "Continuing..." << std::endl;
-	}
 
 	system ( "pause" ); // wait for user exit
 

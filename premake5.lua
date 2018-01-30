@@ -7,7 +7,6 @@ workspace "MTADiag"
 	toolset "v141_xp" -- Enable XP support
 	flags { "StaticRuntime" }
 	vectorextensions "SSE"
-	defines { "_CRT_SECURE_NO_WARNINGS", "WIN32_LEAN_AND_MEAN" }
 
 	filter "configurations:Debug"
 		targetsuffix "_d"
@@ -21,11 +20,8 @@ workspace "MTADiag"
 
 		project "MTADiag"
 			language "C++"
-			cppdialect "C++17"
+			cppdialect "C++14"
 			kind "ConsoleApp"
-
-			buildoptions { "/std:c++latest" }
-			linkoptions { "/MANIFESTUAC:\"level='requireAdministrator' \"" }
 
 			defines { "BUILDING_LIBCURL" }
 			includedirs { "include", "vendor/curl/include" }
@@ -39,6 +35,5 @@ workspace "MTADiag"
 
 				"src/**.cpp",
 
-				"res/**.rc",
-				"res/**.bat"
+				"res/**.rc"
 			}
