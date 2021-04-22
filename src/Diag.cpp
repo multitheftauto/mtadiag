@@ -8,7 +8,7 @@
 * 
 * 
 * 
-* Multi Theft Auto is available from https://www.mta.com/
+* Multi Theft Auto is available from https://www.mtasa.com/
 * 
 *****************************************************************************/ 
 
