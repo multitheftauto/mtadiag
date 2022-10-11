@@ -89,7 +89,7 @@ std::string Curl::CreateMTAPasteBin ( std::string filePath, std::string pasteNam
 
 	if ( curl ) // if curl was initialized
 	{
-		curl_easy_setopt ( curl, CURLOPT_URL, "http://pastebin.mtasa.com/index.php" ); // set the URL
+		curl_easy_setopt ( curl, CURLOPT_URL, "https://pastebin.multitheftauto.com/" ); // set the URL
 		curl_easy_setopt ( curl, CURLOPT_POSTFIELDS, post.c_str() ); // set our log file as the POST field
 		curl_easy_setopt ( curl, CURLOPT_NOPROGRESS, FALSE ); // we want progress
 		curl_easy_setopt ( curl, CURLOPT_PROGRESSFUNCTION, progress_callback ); // set the progress callback function
