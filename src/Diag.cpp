@@ -376,6 +376,7 @@ bool Diag::PollMTAVersions ( void )
 	MTAVersionsInstalled[3] = ReadRegKey ( MTAPathValue, MTA13PathSubKey ); // store MTA 1.3 path, if present
 	MTAVersionsInstalled[4] = ReadRegKey ( MTAPathValue, MTA14PathSubKey ); // store MTA 1.4 path, if present
 	MTAVersionsInstalled[5] = ReadRegKey ( MTAPathValue, MTA15PathSubKey ); // store MTA 1.5 path, if present
+	MTAVersionsInstalled[6] = ReadRegKey ( MTAPathValue, MTA16PathSubKey ); // store MTA 1.6 path, if present
 
 	// if a version isn't installed, "Failed to get key." is returned by ReadRegKey; clear that array element
 	for ( int i = 1; i <= CUR_MTA_VERSIONS; i++ )
@@ -466,6 +467,10 @@ std::string Diag::GetMTAPath ( void )
 		MTAPath = ReadRegKey ( MTAPathValue, MTA15PathSubKey );
 		return MTAPath;
 		break;
+	case 6:
+		MTAPath = ReadRegKey ( MTAPathValue, MTA16PathSubKey );
+		return MTAPath;
+		break;
 	}
 	return "Unable to read MTA path.";
 }
@@ -497,6 +502,11 @@ std::string Diag::GetMTAVersion ( void )
 	case 5:
 		MTAVersion = ReadRegKey ( MTAVerValue, MTA15VerSubKey );
 		MTAShortVersion = "1.5";
+		return MTAVersion;
+		break;
+	case 6:
+		MTAVersion = ReadRegKey ( MTAVerValue, MTA16VerSubKey );
+		MTAShortVersion = "1.6";
 		return MTAVersion;
 		break;
 	}
@@ -533,6 +543,9 @@ void Diag::UpdateMTA ( void )
 		break;
 	case 5:
 		url = MTA15NightlyURL;
+		break;
+	case 6:
+		url = MTA16NightlyURL;
 		break;
 	}
 
