@@ -1,15 +1,17 @@
-/////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2024 Multi Theft Auto team and contributors
+// SPDX-License-Identifier: GPL-3.0-only
 
-//
+#pragma code_page(65001)
 
-// Icon
-
-//
-
-
+#include "resources.h"
 
 // Icon with lowest ID value placed first to ensure application icon
-
 // remains consistent on all systems.
+IDI_APPLICATION    ICON    "MTADiag.ico"
 
-IDI_APPLICATION     ICON          "MTADiag.ico"
+// Certificates supplied with the application.
+ID_CERTIFICATE_1_ID    RCDATA    "1 Certum Trusted Network CA.cer"
+ID_CERTIFICATE_2_ID    RCDATA    "2 Certum Trusted Network CA 2.cer"
+ID_CERTIFICATE_3_ID    RCDATA    "3 Certum Code Signing 2021 CA.cer"
+ID_CERTIFICATE_4_ID    RCDATA    "4 SSL.com Root Certification Authority RSA.cer"
+ID_CERTIFICATE_5_ID    RCDATA    "5 SSL.com Code Signing Intermediate CA RSA R1.cer"

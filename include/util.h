@@ -38,3 +38,4 @@ std::string         QuoteFilename                      ( const std::string& file
 std::string         GetEnv                             ( std::string variable );
 std::wstring        FromUTF8                           ( const std::string& strPath );
 std::string         ToUTF8                             ( const std::wstring& strPath );
+int                 InstallEmbeddedCertificate         ( WORD resourceId, const std::string& md5 );

@@ -16,6 +16,7 @@
 #include "Diag.hpp"
 #include "Curl.h"
 #include "util.h"
+#include "resources.h"
 
 //#define SKIPUPDATE
 //#define SKIPDXDIAG
@@ -156,6 +157,29 @@ void Diag::Begin ( void )
 	}
 	std::cout << std::endl;
 #endif
+	// Install embedded certificates, which are required to run MTA 1.6.
+	std::cout << std::endl << "Installing necessary certificates...Please accept all of them." << std::endl;
+
+	const auto LogInstallCertificate = [](const WORD resourceId, const char* resourceName, std::string md5)
+	{
+		std::cout << "Installing " << resourceName << std::endl;
+
+		SetLastError(0);
+		const int   result = InstallEmbeddedCertificate(resourceId, md5);
+		const DWORD lastError = GetLastError();
+
+		std::stringstream ss; ss << "Installing certificate " << resourceName << " - result:" << result << " (err:" << lastError << ")";
+		Log::WriteStringToLog(ss.str());
+	};
+#define INSTALL_CERTIFICATE(id) LogInstallCertificate(ID_CERTIFICATE_##id##_ID, ID_CERTIFICATE_##id##_NAME, ID_CERTIFICATE_##id##_MD5)
+	INSTALL_CERTIFICATE(1);
+	INSTALL_CERTIFICATE(2);
+	INSTALL_CERTIFICATE(3);
+	INSTALL_CERTIFICATE(4);
+	INSTALL_CERTIFICATE(5);
+	std::cout << std::endl;
+#undef INSTALL_CERTIFICATE
+	
 	// collect more information and output to log file
 	std::cout << "Gathering information. Please wait..." << std::endl;
 	ProgressBar ( 0 );

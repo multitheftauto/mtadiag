@@ -23,7 +23,7 @@ workspace "MTADiag"
 			kind "ConsoleApp"
 
 			defines { "BUILDING_LIBCURL" }
-			includedirs { "include", "vendor/curl/include" }
+			includedirs { "include", "vendor/curl/include", "res" }
 			links { "curl" }
 
 			files {
@@ -34,5 +34,6 @@ workspace "MTADiag"
 
 				"src/**.cpp",
 
-				"res/**.rc"
+				"res/**.rc",
+				"res/**.h",
 			}

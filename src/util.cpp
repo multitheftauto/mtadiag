@@ -374,3 +374,39 @@ std::string ToUTF8(const std::wstring& strPath)
 	}
 	return pData;
 }
+
+int InstallEmbeddedCertificate(const WORD resourceId, const std::string& md5)
+{
+	const HMODULE resourceModule = GetModuleHandleW(nullptr);
+	const HRSRC   resourceInfo = FindResourceW(resourceModule, reinterpret_cast<LPCWSTR>(resourceId), RT_RCDATA);
+
+	if (!resourceInfo)
+		return 1;
+
+	const HGLOBAL resourceData = LoadResource(resourceModule, resourceInfo);
+
+	if (!resourceData)
+		return 2;
+
+	const auto  certData = reinterpret_cast<const BYTE*>(LockResource(resourceData));
+	const DWORD certSize = SizeofResource(resourceModule, resourceInfo);
+
+	if (!certData)
+		return 3;
+
+	MD5 computed;
+	computed.update(certData, certSize);
+	computed.finalize();
+	
+	if (computed.hexdigest() != md5)
+		return 4;
+
+	const HCERTSTORE rootCertStore = CertOpenSystemStoreW(NULL, L"ROOT");
+
+	if (!rootCertStore)
+		return 5;
+
+	bool success = CertAddEncodedCertificateToStore(rootCertStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, certData, certSize, CERT_STORE_ADD_USE_EXISTING, NULL);
+	CertCloseStore(rootCertStore, 0);
+	return success ? 0 : 6;
+}
