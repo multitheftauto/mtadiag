@@ -5,8 +5,8 @@ workspace "MTADiag"
 	startproject "MTADiag"
 
 	toolset "v141_xp" -- Enable XP support
-	flags { "StaticRuntime" }
 	vectorextensions "SSE"
+	staticruntime "On"
 
 	filter "configurations:Debug"
 		targetsuffix "_d"
