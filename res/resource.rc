@@ -40,7 +40,7 @@ BEGIN
         BEGIN
             VALUE "Comments",            ""
             VALUE "CompanyName",         "Multi Theft Auto"
-            VALUE "FileDescription",     "MTADiag"
+            VALUE "FileDescription",     "Diagnostic utility for MTA:SA to resolve user issues"
             VALUE "FileVersion",         "2.9.0.0"
             VALUE "InternalName",        "MTADiag"
             VALUE "LegalCopyright",      "(C) 2003 - 2024 Multi Theft Auto team and contributors"
