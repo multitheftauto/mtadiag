@@ -1,9 +1,16 @@
 // Copyright (c) 2024 Multi Theft Auto team and contributors
 // SPDX-License-Identifier: GPL-3.0-only
 
-#pragma code_page(65001)
+#pragma code_page(1252)
 
 #include "resources.h"
+#include "Windows.h"
+
+#if DBG
+    #define VER_DBG VS_FF_DEBUG
+#else
+    #define VER_DBG 0
+#endif
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
@@ -15,3 +22,36 @@ ID_CERTIFICATE_2_ID    RCDATA    "2 Certum Trusted Network CA 2.cer"
 ID_CERTIFICATE_3_ID    RCDATA    "3 Certum Code Signing 2021 CA.cer"
 ID_CERTIFICATE_4_ID    RCDATA    "4 SSL.com Root Certification Authority RSA.cer"
 ID_CERTIFICATE_5_ID    RCDATA    "5 SSL.com Code Signing Intermediate CA RSA R1.cer"
+
+// Version information.
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION       2,9,0,0
+PRODUCTVERSION    2,9,0,0
+FILEFLAGSMASK     VS_FFI_FILEFLAGSMASK
+FILEFLAGS         VER_DBG
+FILEOS            VOS_NT_WINDOWS32
+FILETYPE          VFT_APP
+FILESUBTYPE       VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        // https://learn.microsoft.com/en-us/windows/win32/menurc/stringfileinfo-block
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments",            ""
+            VALUE "CompanyName",         "Multi Theft Auto"
+            VALUE "FileDescription",     "MTADiag"
+            VALUE "FileVersion",         "2.9.0.0"
+            VALUE "InternalName",        "MTADiag"
+            VALUE "LegalCopyright",      "(C) 2003 - 2024 Multi Theft Auto team and contributors"
+            VALUE "OriginalFilename",    "MTADiag.exe"
+            VALUE "ProductName",         "MTADiag"
+            VALUE "ProductVersion",      "2.9.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        // https://learn.microsoft.com/en-us/windows/win32/menurc/varfileinfo-block
+        VALUE "Translation", 0x0409, 1200    // Language tag: en-US, Character set: Unicode
+    END
+END
