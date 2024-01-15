@@ -4,7 +4,6 @@ workspace "MTADiag"
 	targetdir "bin"
 	startproject "MTADiag"
 
-	toolset "v141_xp" -- Enable XP support
 	vectorextensions "SSE"
 	staticruntime "On"
 
