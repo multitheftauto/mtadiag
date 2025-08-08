@@ -25,8 +25,8 @@ ID_CERTIFICATE_5_ID    RCDATA    "5 SSL.com Code Signing Intermediate CA RSA R1.
 
 // Version information.
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION       2,9,0,0
-PRODUCTVERSION    2,9,0,0
+FILEVERSION       2,10,0,0
+PRODUCTVERSION    2,10,0,0
 FILEFLAGSMASK     VS_FFI_FILEFLAGSMASK
 FILEFLAGS         VER_DBG
 FILEOS            VOS_NT_WINDOWS32
@@ -41,12 +41,12 @@ BEGIN
             VALUE "Comments",            ""
             VALUE "CompanyName",         "Multi Theft Auto"
             VALUE "FileDescription",     "Diagnostic utility for MTA:SA to resolve user issues"
-            VALUE "FileVersion",         "2.9.0.0"
+            VALUE "FileVersion",         "2.10.0.0"
             VALUE "InternalName",        "MTADiag"
-            VALUE "LegalCopyright",      "(C) 2003 - 2024 Multi Theft Auto team and contributors"
+            VALUE "LegalCopyright",      "(C) 2003 - 2025 Multi Theft Auto team and contributors"
             VALUE "OriginalFilename",    "MTADiag.exe"
             VALUE "ProductName",         "MTADiag"
-            VALUE "ProductVersion",      "2.9.0.0"
+            VALUE "ProductVersion",      "2.10.0.0"
         END
     END
     BLOCK "VarFileInfo"

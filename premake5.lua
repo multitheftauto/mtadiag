@@ -36,4 +36,5 @@ workspace "MTADiag"
 
 				"res/**.rc",
 				"res/**.h",
+				"res/**.manifest",
 			}
