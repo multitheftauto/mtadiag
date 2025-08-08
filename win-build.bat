@@ -4,7 +4,7 @@ set VSWHERE=tools\vswhere.exe
 rem Download vswhere (command line utility to find MSBuild path)
 if not exist %VSWHERE% (
 	echo vswhere utility doesn't exist. Downloading...
-	powershell -Command "Invoke-WebRequest https://mirror.mtasa.com/bdata/vswhere.exe -OutFile %VSWHERE%"
+	powershell -Command "Invoke-WebRequest https://mirror-cdn.multitheftauto.com/bdata/vswhere.exe -OutFile %VSWHERE%"
 )
 
 rem Create solution (ignoring pause)
@@ -17,9 +17,9 @@ for /f "usebackq tokens=1* delims=: " %%i in (`%VSWHERE% -latest -requires Micro
 )
 
 rem Output an error if not exists
-set MSBUILDPATH="%InstallDir%\MSBuild\15.0\Bin\MSBuild.exe"
+set MSBUILDPATH="%InstallDir%\MSBuild\Current\Bin\MSBuild.exe"
 if not exist %MSBUILDPATH% (
-	echo Could not find MSBuild. Make sure you have Visual Studio 2017 installed
+	echo Could not find MSBuild. Make sure you have Visual Studio 2022 installed
 	goto end
 )
 echo Found MSBuild at: %MSBUILDPATH%
