@@ -16,7 +16,7 @@
 
 #include "Common.h"
 
-#define CUR_MTA_VERSIONS 6 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
+#define CUR_MTA_VERSIONS 7 // beginning at 1; encompasses 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7
 
 // MTA install path
 #define MTAPathValue	"Last Install Location"
@@ -26,6 +26,7 @@
 #define MTA14PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4"
 #define MTA15PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5"
 #define MTA16PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.6"
+#define MTA17PathSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.7"
 
 // GTA:SA path
 #define MTAGTAPathValue  "GTA:SA Path"
@@ -39,6 +40,7 @@
 #define MTA14VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.4\\Settings\\general"
 #define MTA15VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.5\\Settings\\general"
 #define MTA16VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.6\\Settings\\general"
+#define MTA17VerSubKey "SOFTWARE\\Multi Theft Auto: San Andreas All\\1.7\\Settings\\general"
 
 // Nightly download URLs
 #define MTA11NightlyURL "https://nightly.mtasa.com/?mtasa-1.1.1-rc-latest"
@@ -47,6 +49,7 @@
 #define MTA14NightlyURL "https://nightly.mtasa.com/?mtasa-1.4.1-rc-latest"
 #define MTA15NightlyURL "https://nightly.mtasa.com/?mtasa-1.5-rc-latest"
 #define MTA16NightlyURL "https://nightly.mtasa.com/?mtasa-1.6-rc-latest"
+#define MTA17NightlyURL "https://nightly.mtasa.com/?mtasa-1.7-rc-latest"
 
 #define MTAVerURL "https://nightly.mtasa.com/ver/"
 
