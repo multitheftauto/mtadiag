@@ -25,5 +25,6 @@
 #include <shlobj.h>
 #include <time.h>
 #include "Log.h"
+#include <regex>
 
 #define VERSION "2.10.0"
