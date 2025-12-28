@@ -674,7 +674,39 @@ void Diag::GetDir ( std::string directory )
 
 	Log::WriteFileToLog ( files[FILE_TEMP].c_str(), ( directory + " directory listing" ) ); // write the result to the log file with a description
 }
+bool CensorIPv6InFile(const std::string& filePath)
+{
+	std::ifstream in(filePath, std::ios::in | std::ios::binary);
+	if (!in.is_open())
+	{
+		Log::WriteStringToLog("**** CensorIPv6InFile: Unable to open file for reading");
+		return false;
+	}
 
+	std::stringstream buffer;
+	buffer << in.rdbuf();
+	std::string content = buffer.str();
+	in.close();
+
+	// It's enough for ipconfig output
+	static const std::regex ipv6Regex(
+		R"(\b([0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b)"
+	);
+
+	content = std::regex_replace(content, ipv6Regex, "[IPv6 CENSORED]");
+
+	std::ofstream out(filePath, std::ios::out | std::ios::binary | std::ios::trunc);
+	if (!out.is_open())
+	{
+		Log::WriteStringToLog("**** CensorIPv6InFile: Unable to open file for writing");
+		return false;
+	}
+
+	out << content;
+	out.close();
+
+	return true;
+}
 DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWORD maxTimeMs )
 {
 	Log::WriteDividerToLog();
@@ -757,7 +789,12 @@ DWORD Diag::DoSystemCommandWithOutput ( std::string command, int outputType, DWO
     }
 
     CloseHandle( h );
-
+	// Censor IPv6 ONLY if command contains ipconfig
+	if (command.find("ipconfig") != std::string::npos ||
+		command.find("IPCONFIG") != std::string::npos)
+	{
+		CensorIPv6InFile(files[FILE_TEMP]);
+	}
     if ( outputType != OUTPUT_UNICODE )
     {
 	    Log::WriteFileToLog ( files[FILE_TEMP], ss.str() ); // write the result to the log file with the passed command argument as a description
